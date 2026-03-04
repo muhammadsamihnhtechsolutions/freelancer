@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:freelancer_app/FreelancerDashboard/New%20folder/FindJobViews.dart';
+import 'package:freelancer_app/FreelancerDashboard/findjob/FindJobViews.dart' show FindJobsView;
 import 'package:get/get.dart';
 
 import '../Freelancerprofile/FreelancerProfileView.dart';
@@ -20,11 +20,11 @@ class FreelancerBottomNavView extends StatelessWidget {
   final FreelancerBottomNavController controller =
       Get.put(FreelancerBottomNavController());
 
-  final pages = const [
-    FreelancerDashboardView(),
-    FindJobsView(),
-    MyProposalsView(),
-    FreelancerProfileView(),
+  final pages = [
+    const FreelancerDashboardView(),
+    const FindJobsView(),
+    const MyProposalsView(),
+    FreelancerProfileScreen(),
   ];
 
   static const Color bg = Color(0xFF0D0D0D);

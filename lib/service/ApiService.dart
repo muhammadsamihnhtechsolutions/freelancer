@@ -1,72 +1,60 @@
+
+
+
 // import 'dart:convert';
 // import 'package:flutter/foundation.dart';
-// import 'package:http/http.dart' as http;
-// import 'package:get/get.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:get/get.dart';
+// import 'package:http/http.dart' as http;
 
 // class ApiService {
 //   static const Duration timeout = Duration(seconds: 20);
 
-//   /// ------------------------------------------
-//   /// SAFE SharedPreferences initialize once
-//   /// ------------------------------------------
-//   static SharedPreferences? _prefs;
+//   /// ----------------------------------------------------
+//   /// READ TOKEN BASED ON ROLE
+//   /// ----------------------------------------------------
+//   static Future<String?> _getToken(String? role) async {
+//     final prefs = await SharedPreferences.getInstance();
 
-//   static Future<void> _initPrefs() async {
-//     if (_prefs == null) {
-//       _prefs = await SharedPreferences.getInstance();
-//       debugPrint("🔧 SharedPreferences Initialized");
+//     if (role == "client") {
+//       return prefs.getString("client_token");
+//     } else if (role == "freelancer") {
+//       return prefs.getString("freelancer_token");
 //     }
+
+//     return null;
 //   }
 
-//   /// ------------------------------------------
-//   /// TOKEN SAVE / LOAD
-//   /// ------------------------------------------
-//   static Future<void> saveToken(String token) async {
-//     await _initPrefs();
-//     await _prefs!.setString("token", token);
-//     debugPrint("🔐 Token Saved: $token");
-//   }
-
-//   static Future<String?> getToken() async {
-//     await _initPrefs();
-//     final token = _prefs!.getString("token");
-//     debugPrint("📦 Loaded Token: $token");
-//     return token;
-//   }
-
-//   /// ------------------------------------------
-//   /// HEADERS (Auth optional)
-//   /// ------------------------------------------
-//   static Future<Map<String, String>> _headers({bool includeAuth = true}) async {
-//     await _initPrefs();
-
-//     String? token;
-
-//     if (includeAuth) {
-//       token = _prefs!.getString("token"); // SAFE
-//     }
+//   /// ----------------------------------------------------
+//   /// COMMON HEADERS
+//   /// ----------------------------------------------------
+//   static Future<Map<String, String>> _headers({
+//     required bool auth,
+//     String? role,
+//   }) async {
+//     String? token = auth ? await _getToken(role) : null;
 
 //     return {
 //       "Content-Type": "application/json",
-//       if (includeAuth && token != null && token.isNotEmpty)
+//       if (auth && token != null && token.isNotEmpty) ...{
 //         "Authorization": "Bearer $token",
+//       },
 //     };
 //   }
 
-//   /// ------------------------------------------
-//   /// POST REQUEST  (auth optional)
-//   /// ------------------------------------------
+//   /// ----------------------------------------------------
+//   /// POST REQUEST
+//   /// ----------------------------------------------------
 //   static Future<dynamic> post(
 //     String url,
 //     Map body, {
-//     bool auth = true,
+//     bool auth = false,
+//     String? role,
 //   }) async {
-//     final headers = await _headers(includeAuth: auth);
+//     final headers = await _headers(auth: auth, role: role);
 
 //     debugPrint("⬆️ POST: $url");
 //     debugPrint("📤 Body: ${jsonEncode(body)}");
-//     debugPrint("📌 Headers: $headers");
 
 //     final res = await http
 //         .post(Uri.parse(url), headers: headers, body: jsonEncode(body))
@@ -77,27 +65,42 @@
 //     return _handle(res);
 //   }
 
-//   /// ------------------------------------------
+//   /// ----------------------------------------------------
 //   /// GET REQUEST
-//   /// ------------------------------------------
-//   static Future<dynamic> get(String url) async {
-//     final headers = await _headers();
+//   /// ----------------------------------------------------
+//   static Future<dynamic> get(
+//     String url, {
+//     bool auth = false,
+//     String? role,
+//   }) async {
+//     try {
+//       final headers = await _headers(auth: auth, role: role);
 
-//     debugPrint("⬆️ GET: $url");
+//       print("⬆️ GET: $url");
+//       print("🔐 ROLE → $role");
+//       print("🔐 HEADER → $headers");
 
-//     final res =
-//         await http.get(Uri.parse(url), headers: headers).timeout(timeout);
+//       final response = await http.get(Uri.parse(url), headers: headers);
 
-//     debugPrint("⬇️ Response (${res.statusCode}): ${res.body}");
+//       print("⬇️ Response (${response.statusCode}): ${response.body}");
 
-//     return _handle(res);
+//       return _handle(response);
+//     } catch (e) {
+//       print("❌ GET ERROR → $e");
+//       rethrow;
+//     }
 //   }
 
-//   /// ------------------------------------------
+//   /// ----------------------------------------------------
 //   /// PUT REQUEST
-//   /// ------------------------------------------
-//   static Future<dynamic> put(String url, Map body) async {
-//     final headers = await _headers();
+//   /// ----------------------------------------------------
+//   static Future<dynamic> put(
+//     String url,
+//     Map body, {
+//     bool auth = false,
+//     String? role,
+//   }) async {
+//     final headers = await _headers(auth: auth, role: role);
 
 //     debugPrint("⬆️ PUT: $url");
 
@@ -110,25 +113,28 @@
 //     return _handle(res);
 //   }
 
-//   /// ------------------------------------------
+//   /// ----------------------------------------------------
 //   /// DELETE REQUEST
-//   /// ------------------------------------------
-//   static Future<dynamic> delete(String url) async {
-//     final headers = await _headers();
+//   /// ----------------------------------------------------
+//   static Future<dynamic> delete(
+//     String url, {
+//     bool auth = false,
+//     String? role,
+//   }) async {
+//     final headers = await _headers(auth: auth, role: role);
 
 //     debugPrint("⬆️ DELETE: $url");
 
-//     final res =
-//         await http.delete(Uri.parse(url), headers: headers).timeout(timeout);
+//     final res = await http.delete(Uri.parse(url), headers: headers).timeout(timeout);
 
 //     debugPrint("⬇️ Response (${res.statusCode}): ${res.body}");
 
-//     return _handle(res); // 🔥 CORRECTED HERE
+//     return _handle(res);
 //   }
 
-//   /// ------------------------------------------
+//   /// ----------------------------------------------------
 //   /// HANDLE SERVER RESPONSE
-//   /// ------------------------------------------
+//   /// ----------------------------------------------------
 //   static dynamic _handle(http.Response res) {
 //     final code = res.statusCode;
 
@@ -139,50 +145,70 @@
 
 //       if (code == 401) {
 //         Get.snackbar("Session Expired", "Please login again");
-//         debugPrint("❌ 401 Unauthorized");
 //         return Future.error("Unauthorized");
 //       }
 
 //       final msg = data["message"] ?? "Something went wrong";
-//       debugPrint("❌ API Error: $msg");
-
 //       return Future.error(msg);
 //     } catch (e) {
-//       debugPrint("❌ JSON Parse Error: $e");
 //       return Future.error("Invalid server response");
 //     }
 //   }
 // }
 
+
+
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
   static const Duration timeout = Duration(seconds: 20);
 
-  /// ------------------------------------------
-  /// SIMPLE HEADERS (NO AUTH)
-  /// ------------------------------------------
-  static Map<String, String> _headers({bool includeAuth = false, String? token}) {
+  /// ----------------------------------------------------
+  /// READ TOKEN BASED ON ROLE
+  /// ----------------------------------------------------
+  static Future<String?> _getToken(String? role) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    if (role == "client") {
+      return prefs.getString("client_token");
+    } else if (role == "freelancer") {
+      return prefs.getString("freelancer_token");
+    }
+
+    return null;
+  }
+
+  /// ----------------------------------------------------
+  /// COMMON HEADERS
+  /// ----------------------------------------------------
+  static Future<Map<String, String>> _headers({
+    required bool auth,
+    String? role,
+  }) async {
+    String? token = auth ? await _getToken(role) : null;
+
     return {
       "Content-Type": "application/json",
-      if (includeAuth && token != null && token.isNotEmpty)
+      if (auth && token != null && token.isNotEmpty) ...{
         "Authorization": "Bearer $token",
+      },
     };
   }
 
-  /// ------------------------------------------
+  /// ----------------------------------------------------
   /// POST REQUEST
-  /// ------------------------------------------
+  /// ----------------------------------------------------
   static Future<dynamic> post(
     String url,
     Map body, {
     bool auth = false,
-    String? token,
+    String? role,
   }) async {
-    final headers = _headers(includeAuth: auth, token: token);
+    final headers = await _headers(auth: auth, role: role);
 
     debugPrint("⬆️ POST: $url");
     debugPrint("📤 Body: ${jsonEncode(body)}");
@@ -196,32 +222,42 @@ class ApiService {
     return _handle(res);
   }
 
-  /// ------------------------------------------
+  /// ----------------------------------------------------
   /// GET REQUEST
-  /// ------------------------------------------
-  static Future<dynamic> get(String url, {bool auth = false, String? token}) async {
-    final headers = _headers(includeAuth: auth, token: token);
+  /// ----------------------------------------------------
+  static Future<dynamic> get(
+    String url, {
+    bool auth = false,
+    String? role,
+  }) async {
+    try {
+      final headers = await _headers(auth: auth, role: role);
 
-    debugPrint("⬆️ GET: $url");
+      print("⬆️ GET: $url");
+      print("🔐 ROLE → $role");
+      print("🔐 HEADER → $headers");
 
-    final res =
-        await http.get(Uri.parse(url), headers: headers).timeout(timeout);
+      final response = await http.get(Uri.parse(url), headers: headers);
 
-    debugPrint("⬇️ Response (${res.statusCode}): ${res.body}");
+      print("⬇️ Response (${response.statusCode}): ${response.body}");
 
-    return _handle(res);
+      return _handle(response);
+    } catch (e) {
+      print("❌ GET ERROR → $e");
+      rethrow;
+    }
   }
 
-  /// ------------------------------------------
+  /// ----------------------------------------------------
   /// PUT REQUEST
-  /// ------------------------------------------
+  /// ----------------------------------------------------
   static Future<dynamic> put(
     String url,
     Map body, {
     bool auth = false,
-    String? token,
+    String? role,
   }) async {
-    final headers = _headers(includeAuth: auth, token: token);
+    final headers = await _headers(auth: auth, role: role);
 
     debugPrint("⬆️ PUT: $url");
 
@@ -234,26 +270,28 @@ class ApiService {
     return _handle(res);
   }
 
-  /// ------------------------------------------
+  /// ----------------------------------------------------
   /// DELETE REQUEST
-  /// ------------------------------------------
-  static Future<dynamic> delete(String url, {bool auth = false, String? token}) async {
-    final headers = _headers(includeAuth: auth, token: token);
+  /// ----------------------------------------------------
+  static Future<dynamic> delete(
+    String url, {
+    bool auth = false,
+    String? role,
+  }) async {
+    final headers = await _headers(auth: auth, role: role);
 
     debugPrint("⬆️ DELETE: $url");
 
-    final res = await http
-        .delete(Uri.parse(url), headers: headers)
-        .timeout(timeout);
+    final res = await http.delete(Uri.parse(url), headers: headers).timeout(timeout);
 
     debugPrint("⬇️ Response (${res.statusCode}): ${res.body}");
 
     return _handle(res);
   }
 
-  /// ------------------------------------------
+  /// ----------------------------------------------------
   /// HANDLE SERVER RESPONSE
-  /// ------------------------------------------
+  /// ----------------------------------------------------
   static dynamic _handle(http.Response res) {
     final code = res.statusCode;
 

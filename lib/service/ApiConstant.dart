@@ -20,9 +20,13 @@ static const String baseUrl = "https://freelancesupermarket.hnhsofttechsolutions
   /// ==============================
   /// 👤 FREELANCER PROFILE
   /// ==============================
-  static const String freelancerProfileCreate = '$baseUrl/profiles/freelancer';
-  static const String freelancerProfileUpdate = '$baseUrl/profiles/freelancer';
-  static const String freelancerProfileGet = '$baseUrl/profiles/freelancer';
+  // static const String freelancerProfileCreate = '$baseUrl/profiles/freelancer';
+  // static const String freelancerProfileUpdate = '$baseUrl/profiles/freelancer';
+  // static const String freelancerProfileGet = '$baseUrl/profiles/freelancer';
+
+    /// 🔹 Freelancer Profile
+  static const String freelancerProfile =
+      "$baseUrl/profiles/freelancer";
 
 
 
@@ -32,16 +36,19 @@ static const String baseUrl = "https://freelancesupermarket.hnhsofttechsolutions
   static const String clientProfileCreate = '$baseUrl/profiles/client';
   static const String clientProfileUpdate = '$baseUrl/profiles/client';
   static const String clientProfileGet = '$baseUrl/profiles/client';
+  static const String createJob = "$baseUrl/jobs";
+static const String getCategories = "$baseUrl/jobs/categories";
+
 
 
 
   /// ==============================
   /// 📝 JOBS
   /// ==============================
-  static const String postJob = '$baseUrl/jobs';
-  static const String jobsList = '$baseUrl/jobs';
-  static const String jobDetails = '$baseUrl/jobs/'; // + ID
-  static const String applyJob = '$baseUrl/jobs/'; // + {id}/apply
+  // static const String postJob = '$baseUrl/jobs';
+  // static const String jobsList = '$baseUrl/jobs';
+  // static const String jobDetails = '$baseUrl/jobs/'; // + ID
+  // static const String applyJob = '$baseUrl/jobs/'; // + {id}/apply
 
 
 

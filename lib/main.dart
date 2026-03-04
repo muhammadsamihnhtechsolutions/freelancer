@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:freelancer_app/service/InitailBindings.dart' show InitialBinding;
 import 'package:get/get.dart';
 import 'package:freelancer_app/Routes/AppPages.dart';
 import 'package:freelancer_app/Routes/AppRoutes.dart';
@@ -24,6 +25,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Freelancer App',
       theme: AppTheme.lightTheme,
+        initialBinding: InitialBinding(), 
       initialRoute: AppRoutes.SPLASH,
       getPages: AppPages.pages,
     );

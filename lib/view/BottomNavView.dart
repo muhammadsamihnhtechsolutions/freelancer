@@ -7,7 +7,7 @@ import 'package:freelancer_app/theme/AppColors.dart';
 import 'package:freelancer_app/view/Clientdashboard/BottomnavFreelancer.dart';
 import 'package:freelancer_app/view/Clientdashboard/ClientProfilePage.dart';
 import 'package:freelancer_app/view/Clientdashboard/HomeView.dart';
-import 'package:freelancer_app/view/Jobs.dart';
+import 'package:freelancer_app/view/Clientdashboard/JobPost/Jobs.dart' show AdminJobsPage;
 import 'package:freelancer_app/view/widgets/CustomeBottomNav.dart';
 import 'package:get/get.dart';
 
@@ -20,7 +20,7 @@ final pages = [
   DashboardPage(),              // 0
   AdminJobsPage(),              // 1
   ClientFreelancerProfileUI(),  // 2
-  PostJobMobilePage(),                // 3  ← Add this!
+  PostJob(),                // 3  ← Add this!
   ClientProfilePage(),          // 4
 ];
   static const Color bg = Color(0xFF0D0D0D);

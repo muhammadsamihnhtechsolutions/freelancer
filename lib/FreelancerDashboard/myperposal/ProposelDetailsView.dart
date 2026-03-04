@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:freelancer_app/FreelancerDashboard/findjob/FreeelanceFindJobModel.dart';
 import 'package:freelancer_app/theme/AppColors.dart';
 
 class ProposalDetailsView extends StatelessWidget {
-  const ProposalDetailsView({super.key});
+  const ProposalDetailsView({super.key, required JobModel job});
 
   @override
   Widget build(BuildContext context) {

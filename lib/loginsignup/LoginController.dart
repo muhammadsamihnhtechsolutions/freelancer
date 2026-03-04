@@ -1,29 +1,8 @@
-// import 'package:flutter/material.dart';
-// import 'package:get/get.dart';
-
-// class LoginController extends GetxController {
-//   final formKey = GlobalKey<FormState>();
-
-//   final email = TextEditingController();
-//   final password = TextEditingController();
-
-//   final obscure = true.obs;
-
-//   void togglePassword() => obscure.value = !obscure.value;
-
-//   @override
-//   void onClose() {
-//     email.dispose();
-//     password.dispose();
-//     super.onClose();
-//   }
-// }
-
-
 import 'package:flutter/material.dart';
 import 'package:freelancer_app/loginsignup/LoginResponceModel.dart' show LoginResponse;
 import 'package:freelancer_app/service/Repo.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../Routes/AppRoutes.dart';
 
@@ -48,6 +27,7 @@ class LoginController extends GetxController {
     try {
       debugPrint("🔵 Attempting login…");
 
+      // API CALL
       LoginResponse data =
           await _repo.login(email.text.trim(), password.text.trim());
 
@@ -55,7 +35,19 @@ class LoginController extends GetxController {
       debugPrint("👤 User → ${data.user.fullName}");
       debugPrint("🎭 Role → ${data.user.role}");
 
-      // Role Based Navigation
+      // 🔥 SAVE TOKEN IN STORAGE
+      // final prefs = await SharedPreferences.getInstance();
+      // await prefs.setString("token", data.token);
+      // debugPrint("🔐 TOKEN SAVED IN STORAGE → ${data.token}");
+      final prefs = await SharedPreferences.getInstance();
+
+if (data.user.role == "client") {
+  await prefs.setString("client_token", data.token);
+} else {
+  await prefs.setString("freelancer_token", data.token);
+}
+
+      // ROLE BASED NAVIGATION
       if (data.user.role == "client") {
         Get.offAllNamed(AppRoutes.CLIENT_DASHBOARD);
       } else {
@@ -82,9 +74,8 @@ class LoginController extends GetxController {
     }
   }
 
-  // ❌ don't dispose here — GetX manages safely
-@override
-void onClose() {
-  super.onClose();
-}
+  @override
+  void onClose() {
+    super.onClose();
+  }
 }
