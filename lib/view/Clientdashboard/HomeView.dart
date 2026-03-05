@@ -37,7 +37,7 @@ class DashboardPage extends StatelessWidget {
                   const SizedBox(height: 20),
 
                   // PROFILE STRENGTH BOX
-           const JobsEmptyStateWidget(),
+           const JobsSectionWidget(jobs: [],),
                   const SizedBox(height: 20),
 
 ProfileStrengthWidget(),

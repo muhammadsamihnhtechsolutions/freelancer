@@ -311,4 +311,23 @@ class ApiService {
       return Future.error("Invalid server response");
     }
   }
+  static Future<dynamic> patch(
+  String url,
+  Map body, {
+  bool auth = false,
+  String? role,
+}) async {
+  final headers = await _headers(auth: auth, role: role);
+
+  debugPrint("⬆️ PATCH: $url");
+  debugPrint("📤 Body: ${jsonEncode(body)}");
+
+  final res = await http
+      .patch(Uri.parse(url), headers: headers, body: jsonEncode(body))
+      .timeout(timeout);
+
+  debugPrint("⬇️ Response (${res.statusCode}): ${res.body}");
+
+  return _handle(res);
+}
 }
