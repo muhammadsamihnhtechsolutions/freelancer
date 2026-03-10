@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:freelancer_app/graphweeklyrecntlyclient.dart/GraphActivityController.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+
 
 class RecentActivityWidget extends StatelessWidget {
-  const RecentActivityWidget({super.key});
+  RecentActivityWidget({super.key});
+
+  final controller = Get.find<GraphActivityController>();
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +28,8 @@ class RecentActivityWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // TITLE
+
+          /// TITLE
           Row(
             children: const [
               Icon(Icons.trending_up, size: 18),
@@ -39,120 +46,122 @@ class RecentActivityWidget extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // LIST
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: activityList.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
-            itemBuilder: (context, index) {
-              final item = activityList[index];
+          /// DATA
+          Obx(() {
 
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ACTION
-                  SizedBox(
-                    width: 55,
-                    child: Text(
-                      item['action'],
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(width: 8),
-
-                  // JOB TITLE
-                  Expanded(
-                    child: Text(
-                      item['job'],
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(width: 8),
-
-                  // DATE
-                  SizedBox(
-                    width: 70,
-                    child: Text(
-                      item['date'],
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(width: 8),
-
-                  // STATUS BADGE
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFDDF7E4),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      "Completed",
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.green,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
+            /// LOADING
+            if (controller.isLoading.value) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: CircularProgressIndicator(),
+                ),
               );
-            },
-          ),
+            }
+
+            /// EMPTY
+            if (controller.activities.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.all(12),
+                child: Text(
+                  "No recent activity found",
+                  style: TextStyle(color: Colors.grey),
+                ),
+              );
+            }
+
+            return ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: controller.activities.length > 6
+                  ? 6
+                  : controller.activities.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+
+                final item = controller.activities[index];
+
+                final DateTime date = item["date"];
+
+                final formattedDate =
+                    DateFormat("dd/MM/yyyy").format(date);
+
+                final status = item["status"] ?? "pending";
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
+                    /// ACTION
+                    SizedBox(
+                      width: 55,
+                      child: Text(
+                        item['action'] ?? "",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 8),
+
+                    /// JOB TITLE
+                    Expanded(
+                      child: Text(
+                        item['job'] ?? "",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 8),
+
+                    /// DATE
+                    SizedBox(
+                      width: 75,
+                      child: Text(
+                        formattedDate,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 8),
+
+                    /// STATUS BADGE
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: status == "accepted"
+                            ? const Color(0xFFDDF7E4)
+                            : const Color(0xFFFFF4D6),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        status,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: status == "accepted"
+                              ? Colors.green
+                              : Colors.orange,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          }),
         ],
       ),
     );
   }
 }
-
-// ---------------------------------------
-// DUMMY DATA
-// ---------------------------------------
-
-final List<Map<String, dynamic>> activityList = [
-  {
-    "action": "Hired",
-    "job": "QWASADADADAS",
-    "date": "2/04/2026",
-  },
-  {
-    "action": "Hired",
-    "job": "the example job",
-    "date": "2/01/2026",
-  },
-  {
-    "action": "Hired",
-    "job": "hello a job anddwwwww",
-    "date": "2/01/2026",
-  },
-  {
-    "action": "Hired",
-    "job": "ddddwwwwwwwwwwww",
-    "date": "2/01/2026",
-  },
-  {
-    "action": "Hired",
-    "job": "example job !!!!!!!!!!!!!!!!!!!!!!!",
-    "date": "2/01/2026",
-  },
-  {
-    "action": "Hired",
-    "job": "This is job a-776",
-    "date": "2/01/2026",
-  },
-];

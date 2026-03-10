@@ -1,10 +1,15 @@
+import 'dart:io';
+
+import 'package:freelancer_app/ClientProfilePage/ClientProfileModel.dart';
 import 'package:freelancer_app/FreelancerDashboard/Freelancerprofile/FreelancerProfileModel.dart';
+import 'package:freelancer_app/loginsignup/ClientProposal/ClientProposalModel.dart';
 import 'package:freelancer_app/loginsignup/SignUpModel.dart';
 import 'package:freelancer_app/service/ApiConstant.dart' show ApiConstants;
 import 'package:freelancer_app/service/ApiService.dart';
 import 'package:freelancer_app/view/Clientdashboard/JobPost/AlljobModel.dart';
 import 'package:freelancer_app/view/Clientdashboard/JobPost/JobCatogeryModel.dart';
 import 'package:freelancer_app/view/Clientdashboard/JobPost/JobPostModel.dart';
+import 'package:freelancer_app/view/widgets/freelancerReview/ReviewModel.dart';
 
 import '../FreelancerDashboard/findjob/FreeelanceFindJobModel.dart';
 import '../FreelancerDashboard/myperposal/ProposelModel.dart';
@@ -160,10 +165,8 @@ static Future<List<AdminJobModel>> getClientJobs() async {
 
     print("🔴 CLOSING JOB → $jobId");
     print("➡️ URL → $url");
-
-    final res = await ApiService.patch(
+   final res = await ApiService.get(
       url,
-      {},
       auth: true,
       role: "client",
     );
@@ -212,10 +215,8 @@ static Future<List<AdminJobModel>> getClientJobs() async {
     print("➡️ STATUS → $status");
     print("➡️ URL → $url");
     print("-----------------------------------");
-
-    final res = await ApiService.patch(
+   final res = await ApiService.get(
       url,
-      {"status": status},
       auth: true,
       role: "client",
     );
@@ -322,3 +323,489 @@ class FreelancerProfileRepo {
   }
 
 }
+
+class ClientProposalRepo {
+
+  static Future<List<ClientProposalModel>> getJobProposals(String jobId) async {
+
+    final url = ApiConstants.jobProposals(jobId);
+
+    print("--------------------------------------------------");
+    print("🔵 FETCH CLIENT JOB PROPOSALS");
+    print("➡️ JOB ID → $jobId");
+    print("➡️ URL → $url");
+    print("--------------------------------------------------");
+
+    final res = await ApiService.get(
+      url,
+      auth: true,
+      role: "client",
+    );
+
+    print("⬇️ RAW RESPONSE → $res");
+
+    /// safety check
+    if (res == null) {
+
+      print("❌ API RESPONSE NULL");
+
+      return [];
+    }
+
+    if (res['data'] == null) {
+
+      print("⚠️ DATA FIELD NULL");
+
+      return [];
+    }
+
+    final List list = res['data'];
+
+    print("📦 TOTAL PROPOSALS RECEIVED → ${list.length}");
+
+    final proposals = list
+        .map((e) {
+          print("➡️ PROPOSAL ITEM → $e");
+          return ClientProposalModel.fromJson(e);
+        })
+        .toList();
+
+    print("✅ PARSED PROPOSALS → ${proposals.length}");
+
+    return proposals;
+  }
+}
+
+class ReviewsRepo {
+
+  static Future<List<ReviewModel>> getUserReviews(String userId) async {
+
+    final url = ApiConstants.userReviews(userId);
+
+    print("--------------------------------------------------");
+    print("🟡 FETCH USER REVIEWS");
+    print("➡️ USER ID → $userId");
+    print("➡️ URL → $url");
+    print("--------------------------------------------------");
+
+    final res = await ApiService.get(
+      url,
+      auth: true,
+      role: "client",
+    );
+
+    print("⬇️ RAW RESPONSE → $res");
+
+    /// SAFETY CHECK
+    if (res == null) {
+
+      print("❌ API RESPONSE NULL");
+
+      return [];
+    }
+
+    if (res['data'] == null) {
+
+      print("⚠️ DATA FIELD NULL");
+
+      return [];
+    }
+
+    final List list = res['data'];
+
+    print("📦 TOTAL REVIEWS RECEIVED → ${list.length}");
+
+    /// PARSE REVIEWS
+    final reviews = list.map((e) {
+
+      print("➡️ REVIEW ITEM → $e");
+
+      try {
+
+        final review = ReviewModel.fromJson(e);
+
+        print(
+            "✅ PARSED REVIEW → ${review.name} | Rating: ${review.rating}");
+
+        return review;
+
+      } catch (err) {
+
+        print("❌ REVIEW PARSE ERROR → $err");
+
+        return null;
+
+      }
+
+    }).whereType<ReviewModel>().toList();
+
+    print("--------------------------------------------------");
+    print("✅ TOTAL PARSED REVIEWS → ${reviews.length}");
+    print("--------------------------------------------------");
+
+    return reviews;
+  }
+}
+
+class ClientViewDetailsProposalRepo {
+
+  /// ==================================================
+  /// ACCEPT / REJECT PROPOSAL
+  /// PATCH /proposals/{proposalId}/status
+  /// ==================================================
+
+static Future<dynamic> updateProposalStatus(
+  String proposalId,
+  String status,
+) async {
+
+  final url = "${ApiConstants.baseUrl}/proposals/$proposalId/status";
+
+  print("--------------------------------------------------");
+  print("🟠 UPDATING PROPOSAL STATUS");
+  print("➡️ PROPOSAL ID → $proposalId");
+  print("➡️ STATUS → $status");
+  print("➡️ URL → $url");
+  print("--------------------------------------------------");
+
+  try {
+
+    final res = await ApiService.patch(
+      url,
+      {
+        "status": status
+      },
+      auth: true,
+      role: "client",
+    );
+
+    print("⬇️ RAW RESPONSE → $res");
+
+    /// NULL CHECK
+    if (res == null) {
+
+      print("❌ ERROR → RESPONSE NULL");
+
+      return {
+        "success": false,
+        "message": "Server returned null response"
+      };
+    }
+
+    /// SUCCESS CHECK
+    if (res["success"] == true) {
+
+      print("✅ STATUS UPDATED SUCCESSFULLY");
+
+      return res;
+    }
+
+    /// API ERROR MESSAGE
+    print("❌ API FAILED → ${res["message"]}");
+
+    return {
+      "success": false,
+      "message": res["message"] ?? "Unknown error"
+    };
+
+  } catch (e) {
+
+    print("❌ EXCEPTION OCCURRED");
+    print("➡️ ERROR → $e");
+
+    return {
+      "success": false,
+      "message": e.toString()
+    };
+  }
+}
+
+
+  /// ACCEPT PROPOSAL
+  static Future<dynamic> acceptProposal(String proposalId) async {
+
+    print("--------------------------------------------------");
+    print("🟢 ACCEPT PROPOSAL");
+    print("➡️ PROPOSAL ID → $proposalId");
+    print("--------------------------------------------------");
+
+    return updateProposalStatus(proposalId, "accepted");
+  }
+
+  /// REJECT PROPOSAL
+  static Future<dynamic> rejectProposal(String proposalId) async {
+
+    print("--------------------------------------------------");
+    print("🔴 REJECT PROPOSAL");
+    print("➡️ PROPOSAL ID → $proposalId");
+    print("--------------------------------------------------");
+
+    return updateProposalStatus(proposalId, "rejected");
+  }
+
+  /// ==================================================
+  /// APPROVE WORK
+  /// POST /jobs/{jobId}/approve
+  /// ==================================================
+
+  static Future<dynamic> approveWork(String jobId) async {
+
+    final url = "${ApiConstants.baseUrl}/jobs/$jobId/approve";
+
+    print("--------------------------------------------------");
+    print("🟣 APPROVE WORK");
+    print("➡️ JOB ID → $jobId");
+    print("➡️ URL → $url");
+    print("--------------------------------------------------");
+
+    final res = await ApiService.post(
+      url,
+      {},                    // 👈 EMPTY BODY REQUIRED
+      auth: true,
+      role: "client",
+    );
+
+    print("⬇️ RAW RESPONSE → $res");
+
+    return res;
+  }
+}
+class DashboardRepo {
+
+  /// GET CLIENT JOBS
+  static Future<dynamic> getClientJobs(String clientId) async {
+
+    final url = "${ApiConstants.clientJobs}/$clientId";
+
+    print("--------------------------------------------------");
+    print("🔵 FETCH CLIENT JOBS");
+    print("➡️ CLIENT ID → $clientId");
+    print("➡️ URL → $url");
+    print("--------------------------------------------------");
+
+    try {
+
+      final res = await ApiService.get(
+        url,
+        auth: true,
+        role: "client",
+      );
+
+      print("⬇️ CLIENT JOBS RESPONSE → $res");
+
+      return res;
+
+    } catch (e) {
+
+      print("❌ CLIENT JOBS ERROR → $e");
+
+      return null;
+    }
+  }
+
+
+  /// GET PROPOSALS BY JOB
+  static Future<dynamic> getProposalsByJob(String jobId) async {
+
+    final url = "${ApiConstants.proposalsByJob}/$jobId";
+
+    print("--------------------------------------------------");
+    print("🟣 FETCH JOB PROPOSALS");
+    print("➡️ JOB ID → $jobId");
+    print("➡️ URL → $url");
+    print("--------------------------------------------------");
+
+    try {
+
+      final res = await ApiService.get(
+        url,
+        auth: true,
+        role: "client",
+      );
+
+      print("⬇️ JOB PROPOSALS RESPONSE → $res");
+
+      return res;
+
+    } catch (e) {
+
+      print("❌ JOB PROPOSALS ERROR → $e");
+
+      return null;
+    }
+  }
+}
+
+
+// class ClientProfileRepo {
+
+//   static Future<dynamic> saveClientProfile(
+//     ClientProfileModel profile,
+//     bool isEdit,
+//   ) async {
+
+//     final url = ApiConstants.clientProfile;
+
+//     print("----------------------------------");
+//     print("🟠 SAVE CLIENT PROFILE");
+//     print("➡️ EDIT MODE → $isEdit");
+//     print("➡️ URL → $url");
+//     print("➡️ DATA → ${profile.toJson()}");
+//     print("----------------------------------");
+
+//     final res = isEdit
+//         ? await ApiService.put(
+//             url,
+//             profile.toJson(),
+//             auth: true,
+//             role: "client",
+//           )
+//         : await ApiService.post(
+//             url,
+//             profile.toJson(),
+//             auth: true,
+//             role: "client",
+//           );
+
+//     return res;
+//   }
+// }
+
+class ClientProfileRepo {
+
+  /// ==================================
+  /// CREATE / UPDATE PROFILE
+  /// ==================================
+  static Future<dynamic> saveClientProfile(
+    ClientProfileModel profile,
+    bool isEdit,
+  ) async {
+
+    final url = ApiConstants.clientProfile;
+
+    print("==================================================");
+    print("🟠 SAVE CLIENT PROFILE");
+    print("➡️ EDIT MODE → $isEdit");
+    print("➡️ URL → $url");
+    print("➡️ BODY → ${profile.toJson()}");
+    print("==================================================");
+
+    try {
+
+      final res = isEdit
+          ? await ApiService.put(
+              url,
+              profile.toJson(),
+              auth: true,
+              role: "client",
+            )
+          : await ApiService.post(
+              url,
+              profile.toJson(),
+              auth: true,
+              role: "client",
+            );
+
+      print("⬇️ SAVE PROFILE RESPONSE → $res");
+
+      return res;
+
+    } catch (e) {
+
+      print("❌ SAVE PROFILE API ERROR → $e");
+
+      return {
+        "success": false,
+        "message": e.toString(),
+      };
+
+    }
+  }
+
+  /// ==================================
+  /// GET CLIENT PROFILE
+  /// ==================================
+  static Future<dynamic> getClientProfile() async {
+
+    final url = ApiConstants.clientProfile;
+
+    print("==================================================");
+    print("🔵 GET CLIENT PROFILE");
+    print("➡️ URL → $url");
+    print("==================================================");
+
+    try {
+
+      final res = await ApiService.get(
+        url,
+        auth: true,
+        role: "client",
+      );
+
+      print("⬇️ GET PROFILE RESPONSE → $res");
+
+      /// PROFILE NOT FOUND CASE
+      if (res["success"] == false) {
+
+        print("⚠️ PROFILE NOT FOUND");
+
+        return {
+          "success": false,
+          "data": null,
+          "message": res["message"]
+        };
+      }
+
+      return res;
+
+    } catch (e) {
+
+      print("❌ GET PROFILE API ERROR → $e");
+
+      return {
+        "success": false,
+        "data": null,
+        "message": e.toString()
+      };
+
+    }
+  }
+  /// ==================================
+/// UPLOAD CLIENT LOGO
+/// ==================================
+
+static Future<dynamic> uploadLogo(File imageFile) async {
+
+  final url = ApiConstants.uploadLogo;
+
+  print("==================================================");
+  print("🟣 UPLOAD CLIENT LOGO");
+  print("➡️ URL → $url");
+  print("==================================================");
+
+  try {
+
+    final res = await ApiService.uploadFile(
+      url,
+      imageFile,
+      fieldName: "file",   // ✅ CHANGED
+      auth: true,
+      role: "client",
+    );
+
+    print("⬇️ UPLOAD LOGO RESPONSE → $res");
+
+    return res;
+
+  } catch (e) {
+
+    print("❌ UPLOAD LOGO ERROR → $e");
+
+    return {
+      "success": false,
+      "message": e.toString(),
+    };
+  }
+}
+}
+

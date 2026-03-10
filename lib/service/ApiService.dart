@@ -159,10 +159,12 @@
 
 
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 class ApiService {
   static const Duration timeout = Duration(seconds: 20);
@@ -225,28 +227,30 @@ class ApiService {
   /// ----------------------------------------------------
   /// GET REQUEST
   /// ----------------------------------------------------
-  static Future<dynamic> get(
-    String url, {
-    bool auth = false,
-    String? role,
-  }) async {
-    try {
-      final headers = await _headers(auth: auth, role: role);
+static Future<dynamic> get(
+  String url, {
+  bool auth = false,
+  String? role,
+}) async {
+  try {
+    final headers = await _headers(auth: auth, role: role);
 
-      print("⬆️ GET: $url");
-      print("🔐 ROLE → $role");
-      print("🔐 HEADER → $headers");
+    print("⬆️ GET: $url");
+    print("🔐 ROLE → $role");
+    print("🔐 HEADER → $headers");
 
-      final response = await http.get(Uri.parse(url), headers: headers);
+    final response = await http
+        .get(Uri.parse(url), headers: headers)
+        .timeout(timeout);
 
-      print("⬇️ Response (${response.statusCode}): ${response.body}");
+    print("⬇️ Response (${response.statusCode}): ${response.body}");
 
-      return _handle(response);
-    } catch (e) {
-      print("❌ GET ERROR → $e");
-      rethrow;
-    }
+    return _handle(response);
+  } catch (e) {
+    print("❌ GET ERROR → $e");
+    rethrow;
   }
+}
 
   /// ----------------------------------------------------
   /// PUT REQUEST
@@ -317,17 +321,314 @@ class ApiService {
   bool auth = false,
   String? role,
 }) async {
+
   final headers = await _headers(auth: auth, role: role);
 
   debugPrint("⬆️ PATCH: $url");
   debugPrint("📤 Body: ${jsonEncode(body)}");
 
   final res = await http
-      .patch(Uri.parse(url), headers: headers, body: jsonEncode(body))
+      .patch(
+        Uri.parse(url),
+        headers: headers,
+        body: jsonEncode(body),
+      )
       .timeout(timeout);
 
   debugPrint("⬇️ Response (${res.statusCode}): ${res.body}");
 
   return _handle(res);
 }
+/// ----------------------------------------------------
+/// MULTIPART FILE UPLOAD
+/// ----------------------------------------------------
+
+static Future<dynamic> uploadFile(
+  String url,
+  File file, {
+  required String fieldName,
+  bool auth = false,
+  String? role,
+}) async {
+
+  try {
+
+    final token = auth ? await _getToken(role) : null;
+
+    print("==================================================");
+    print("⬆️ MULTIPART UPLOAD: $url");
+    print("📁 FILE → ${file.path}");
+    print("🔐 ROLE → $role");
+    print("==================================================");
+
+    final request = http.MultipartRequest(
+      "POST",
+      Uri.parse(url),
+    );
+
+    /// Add Authorization header
+    if (auth && token != null && token.isNotEmpty) {
+      request.headers["Authorization"] = "Bearer $token";
+    }
+
+    /// 🔥 Detect image type
+    final extension = file.path.split('.').last.toLowerCase();
+
+    MediaType mediaType;
+
+    if (extension == "png") {
+      mediaType = MediaType("image", "png");
+    } else if (extension == "jpg" || extension == "jpeg") {
+      mediaType = MediaType("image", "jpeg");
+    } else {
+      print("⚠️ Unknown extension → defaulting to jpeg");
+      mediaType = MediaType("image", "jpeg");
+    }
+
+    /// Add file with content type
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        fieldName,
+        file.path,
+        contentType: mediaType,
+      ),
+    );
+
+    final streamedResponse =
+        await request.send().timeout(timeout);
+
+    final response =
+        await http.Response.fromStream(streamedResponse);
+
+    print("⬇️ Upload Response (${response.statusCode}): ${response.body}");
+
+    return _handle(response);
+
+  } catch (e) {
+
+    print("❌ UPLOAD ERROR → $e");
+
+    return Future.error("Upload failed");
+  }
 }
+
+}
+
+
+
+// import 'dart:convert';
+// import 'package:flutter/foundation.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:get/get.dart';
+// import 'package:http/http.dart' as http;
+
+// class ApiService {
+//   static const Duration timeout = Duration(seconds: 20);
+
+//   /// ----------------------------------------------------
+//   /// READ TOKEN BASED ON ROLE
+//   /// ----------------------------------------------------
+//   static Future<String?> _getToken(String? role) async {
+//     final prefs = await SharedPreferences.getInstance();
+
+//     if (role == "client") {
+//       return prefs.getString("client_token");
+//     } else if (role == "freelancer") {
+//       return prefs.getString("freelancer_token");
+//     }
+
+//     return null;
+//   }
+
+//   /// ----------------------------------------------------
+//   /// COMMON HEADERS
+//   /// ----------------------------------------------------
+//   static Future<Map<String, String>> _headers({
+//     required bool auth,
+//     String? role,
+//   }) async {
+//     String? token = auth ? await _getToken(role) : null;
+
+//     return {
+//       "Content-Type": "application/json",
+//       if (auth && token != null && token.isNotEmpty)
+//         "Authorization": "Bearer $token",
+//     };
+//   }
+
+//   /// ----------------------------------------------------
+//   /// POST REQUEST
+//   /// ----------------------------------------------------
+//   static Future<dynamic> post(
+//     String url,
+//     Map body, {
+//     bool auth = false,
+//     String? role,
+//   }) async {
+//     try {
+//       final headers = await _headers(auth: auth, role: role);
+
+//       debugPrint("⬆️ POST: $url");
+//       debugPrint("🔐 ROLE → $role");
+//       debugPrint("🔐 HEADER → $headers");
+//       debugPrint("📤 Body → ${jsonEncode(body)}");
+
+//       final res = await http
+//           .post(Uri.parse(url), headers: headers, body: jsonEncode(body))
+//           .timeout(timeout);
+
+//       debugPrint("⬇️ Response (${res.statusCode}): ${res.body}");
+
+//       return _handle(res);
+//     } catch (e) {
+//       debugPrint("❌ POST ERROR → $e");
+//       rethrow;
+//     }
+//   }
+
+//   /// ----------------------------------------------------
+//   /// GET REQUEST
+//   /// ----------------------------------------------------
+//   static Future<dynamic> get(
+//     String url, {
+//     bool auth = false,
+//     String? role,
+//   }) async {
+//     try {
+//       final headers = await _headers(auth: auth, role: role);
+
+//       debugPrint("⬆️ GET: $url");
+//       debugPrint("🔐 ROLE → $role");
+//       debugPrint("🔐 HEADER → $headers");
+
+//       final response = await http
+//           .get(Uri.parse(url), headers: headers)
+//           .timeout(timeout);
+
+//       debugPrint("⬇️ Response (${response.statusCode}): ${response.body}");
+
+//       return _handle(response);
+//     } catch (e) {
+//       debugPrint("❌ GET ERROR → $e");
+//       rethrow;
+//     }
+//   }
+
+//   /// ----------------------------------------------------
+//   /// PUT REQUEST
+//   /// ----------------------------------------------------
+//   static Future<dynamic> put(
+//     String url,
+//     Map body, {
+//     bool auth = false,
+//     String? role,
+//   }) async {
+//     try {
+//       final headers = await _headers(auth: auth, role: role);
+
+//       debugPrint("⬆️ PUT: $url");
+//       debugPrint("🔐 ROLE → $role");
+//       debugPrint("📤 Body → ${jsonEncode(body)}");
+
+//       final res = await http
+//           .put(Uri.parse(url), headers: headers, body: jsonEncode(body))
+//           .timeout(timeout);
+
+//       debugPrint("⬇️ Response (${res.statusCode}): ${res.body}");
+
+//       return _handle(res);
+//     } catch (e) {
+//       debugPrint("❌ PUT ERROR → $e");
+//       rethrow;
+//     }
+//   }
+
+//   /// ----------------------------------------------------
+//   /// DELETE REQUEST
+//   /// ----------------------------------------------------
+//   static Future<dynamic> delete(
+//     String url, {
+//     bool auth = false,
+//     String? role,
+//   }) async {
+//     try {
+//       final headers = await _headers(auth: auth, role: role);
+
+//       debugPrint("⬆️ DELETE: $url");
+//       debugPrint("🔐 ROLE → $role");
+
+//       final res =
+//           await http.delete(Uri.parse(url), headers: headers).timeout(timeout);
+
+//       debugPrint("⬇️ Response (${res.statusCode}): ${res.body}");
+
+//       return _handle(res);
+//     } catch (e) {
+//       debugPrint("❌ DELETE ERROR → $e");
+//       rethrow;
+//     }
+//   }
+
+//   /// ----------------------------------------------------
+//   /// PATCH REQUEST
+//   /// ----------------------------------------------------
+//   static Future<dynamic> patch(
+//     String url,
+//     Map body, {
+//     bool auth = false,
+//     String? role,
+//   }) async {
+//     try {
+//       final headers = await _headers(auth: auth, role: role);
+
+//       debugPrint("⬆️ PATCH: $url");
+//       debugPrint("🔐 ROLE → $role");
+//       debugPrint("📤 Body → ${jsonEncode(body)}");
+
+//       final res = await http
+//           .patch(
+//             Uri.parse(url),
+//             headers: headers,
+//             body: jsonEncode(body),
+//           )
+//           .timeout(timeout);
+
+//       debugPrint("⬇️ Response (${res.statusCode}): ${res.body}");
+
+//       return _handle(res);
+//     } catch (e) {
+//       debugPrint("❌ PATCH ERROR → $e");
+//       rethrow;
+//     }
+//   }
+
+//   /// ----------------------------------------------------
+//   /// HANDLE SERVER RESPONSE
+//   /// ----------------------------------------------------
+//   static dynamic _handle(http.Response res) {
+//     final code = res.statusCode;
+
+//     try {
+//       final data = jsonDecode(res.body);
+
+//       if (code >= 200 && code < 300) {
+//         debugPrint("✅ SUCCESS RESPONSE");
+//         return data;
+//       }
+
+//       if (code == 401) {
+//         debugPrint("🔒 401 Unauthorized");
+//         Get.snackbar("Session Expired", "Please login again");
+//         return Future.error("Unauthorized");
+//       }
+
+//       debugPrint("❌ SERVER ERROR ($code) → ${res.body}");
+
+//       final msg = data["message"] ?? "Something went wrong";
+//       return Future.error(msg);
+//     } catch (e) {
+//       debugPrint("❌ RESPONSE PARSE ERROR → $e");
+//       return Future.error("Invalid server response");
+//     }
+//   }
+// }

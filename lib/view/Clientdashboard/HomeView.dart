@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:freelancer_app/graphweeklyrecntlyclient.dart/GraphActivityController.dart';
 import 'package:freelancer_app/view/widgets/AppTopBar.dart';
 import 'package:freelancer_app/view/widgets/DashBoardHeaderBanner.dart';
 import 'package:freelancer_app/view/widgets/JobSetion.dart';
 import 'package:freelancer_app/view/widgets/WeeklyGraphs.dart';
 
-import '../widgets/FreelancerReviews.dart';
 import '../widgets/ProfileStrengthWidget.dart';
 import '../widgets/RecentActivitywidget.dart';
 
+import 'package:get/get.dart';
+
 
 class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key});
+   DashboardPage({super.key});
+
+    final controller = Get.put(GraphActivityController());
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +46,7 @@ class DashboardPage extends StatelessWidget {
 
 ProfileStrengthWidget(),
                   const SizedBox(height: 20),
-                  FreelancerReviewsSection(),
+// 
                   const SizedBox(height: 20),
                   
 WeeklyActivityCard(),

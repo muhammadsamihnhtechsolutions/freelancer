@@ -1,3 +1,4 @@
+import 'package:freelancer_app/ClientProfilePage/ClientProfileController.dart';
 import 'package:freelancer_app/FreelancerDashboard/myperposal/ProposelController.dart' show ProposalController;
 import 'package:freelancer_app/controller/DashboardController.dart';
 import 'package:freelancer_app/view/Clientdashboard/JobPost/PostJobController.dart';
@@ -18,5 +19,6 @@ class InitialBinding extends Bindings {
     Get.lazyPut(()=>JobsController());
     Get.lazyPut(()=>DashboardController());
     Get.lazyPut(() => JobController());
+    Get.lazyPut(()=>ClientProfileController());
   }
 }

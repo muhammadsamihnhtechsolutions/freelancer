@@ -863,69 +863,134 @@
 
 
 import 'package:flutter/material.dart';
+import 'package:freelancer_app/loginsignup/ClientProposal/ClientProposalPage.dart';
 import 'package:freelancer_app/view/Clientdashboard/JobPost/AllJobsController.dart';
 import 'package:freelancer_app/view/Clientdashboard/JobPost/AlljobModel.dart';
+import 'package:freelancer_app/view/Clientdashboard/PostJobPage.dart';
 import 'package:get/get.dart';
 
+
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:freelancer_app/theme/AppColors.dart';
+import 'package:freelancer_app/loginsignup/ClientProposal/ClientProposalPage.dart';
+import 'package:freelancer_app/view/Clientdashboard/JobPost/AllJobsController.dart';
+import 'package:freelancer_app/view/Clientdashboard/JobPost/AlljobModel.dart';
+import 'package:freelancer_app/view/Clientdashboard/PostJobPage.dart';
 
 class AdminJobsPage extends StatelessWidget {
   AdminJobsPage({super.key});
 
   final controller = Get.put(AdminJobsController());
-
   final RxString search = "".obs;
   final RxString statusFilter = "all".obs;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FC),
+      backgroundColor: const Color(0xFFF4F6FA),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.fromLTRB(18, 20, 18, 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+
+              /// HEADER
               const Text(
                 "All Jobs",
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800),
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-              const SizedBox(height: 16),
 
-              /// SEARCH + FILTER + REFRESH
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
+              const SizedBox(height: 20),
+
+              /// SEARCH + FILTER
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(.04),
+                      blurRadius: 12,
+                    )
+                  ],
+                ),
+                child: Column(
+                  children: [
+
+                    /// Search
+                    TextField(
                       onChanged: (v) => search.value = v,
-                      decoration: _fieldDeco("Search jobs..."),
+                      decoration: InputDecoration(
+                        hintText: "Search jobs or clients...",
+                        prefixIcon: const Icon(Icons.search),
+                        filled: true,
+                        fillColor: const Color(0xFFF4F6FA),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
 
-                  Obx(() => DropdownButton<String>(
-                        value: statusFilter.value,
-                        items: const [
-                          DropdownMenuItem(value: "all", child: Text("All")),
-                          DropdownMenuItem(value: "open", child: Text("Open")),
-                          DropdownMenuItem(value: "closed", child: Text("Closed")),
-                          DropdownMenuItem(value: "pending", child: Text("Pending")),
-                        ],
-                        onChanged: (v) => statusFilter.value = v ?? "all",
-                      )),
+                    const SizedBox(height: 14),
 
-                  const SizedBox(width: 10),
+                    Row(
+                      children: [
 
-                  ElevatedButton.icon(
-                    onPressed: controller.fetchJobs,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text("Refresh"),
-                  ),
-                ],
+                        /// Status Dropdown
+                        Expanded(
+                          child: Obx(() => Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF4F6FA),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: DropdownButton<String>(
+                                  value: statusFilter.value,
+                                  isExpanded: true,
+                                  underline: const SizedBox(),
+                                  items: const [
+                                    DropdownMenuItem(value: "all", child: Text("All")),
+                                    DropdownMenuItem(value: "open", child: Text("Open")),
+                                    DropdownMenuItem(value: "closed", child: Text("Closed")),
+                                    DropdownMenuItem(value: "pending", child: Text("Pending")),
+                                  ],
+                                  onChanged: (v) => statusFilter.value = v ?? "all",
+                                ),
+                              )),
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        /// Refresh
+                        InkWell(
+                          onTap: controller.fetchJobs,
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            height: 48,
+                            width: 48,
+                            decoration: BoxDecoration(
+                              gradient: AppColors.primaryGradient,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.refresh, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
+              /// LIST
               Expanded(
                 child: Obx(() {
                   if (controller.loading.value) {
@@ -962,148 +1027,97 @@ class AdminJobsPage extends StatelessWidget {
     );
   }
 }
-class _JobCard extends StatelessWidget {
-  final AdminJobModel job;
-
-  const _JobCard({required this.job});
-
-  @override
-  Widget build(BuildContext context) {
-
-    final c = Get.find<AdminJobsController>();
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-        color: Colors.white,
-      ),
-
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-
-        children: [
-
-          /// TITLE
-          Text(
-            job.title,
-            style: const TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 16,
-            ),
-          ),
-
-          const SizedBox(height: 6),
-
-          /// CLIENT
-          Text("Client: ${job.clientName}"),
-
-          /// BUDGET
-          Text("Budget: £${job.budgetMin} - £${job.budgetMax}"),
-
-          /// TYPE
-          Text("Type: ${job.jobType}"),
-
-          /// STATUS
-          StatusBadge(status: job.status),
-
-          const SizedBox(height: 12),
-
-          /// ACTION BUTTONS
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-
-            children: [
-
-              /// APPROVE
-              _MiniBtn(
-                text: "Approve",
-                bg: const Color(0xFF12B76A),
-                onTap: () => c.approveJob(job.id)
-              ),
-
-              /// REJECT / CLOSE
-              _MiniBtn(
-                text: "Reject",
-                bg: const Color(0xFFF04438),
-                onTap: () => c.rejectJob(job.id),
-              ),
-
-              /// PROPOSALS
-              _MiniBtn(
-                text: "Proposals (${job.proposalsCount})",
-                bg: const Color(0xFF2F6BFF),
-                onTap: () {
-
-                  Get.snackbar(
-                    "Proposals",
-                    "Job: ${job.title}",
-                  );
-
-                },
-              ),
-
-            ],
-          )
-        ],
-      ),
-    );
-  }
-}
 
 // class _JobCard extends StatelessWidget {
 //   final AdminJobModel job;
+
 //   const _JobCard({required this.job});
 
 //   @override
 //   Widget build(BuildContext context) {
+
 //     final c = Get.find<AdminJobsController>();
 
 //     return Container(
 //       margin: const EdgeInsets.only(bottom: 12),
 //       padding: const EdgeInsets.all(16),
+
 //       decoration: BoxDecoration(
 //         borderRadius: BorderRadius.circular(14),
 //         border: Border.all(color: const Color(0xFFE5E7EB)),
 //         color: Colors.white,
 //       ),
+
 //       child: Column(
 //         crossAxisAlignment: CrossAxisAlignment.start,
+
 //         children: [
-//           Text(job.title,
-//               style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+
+//           /// TITLE
+//           Text(
+//             job.title,
+//             style: const TextStyle(
+//               fontWeight: FontWeight.w700,
+//               fontSize: 16,
+//             ),
+//           ),
+
 //           const SizedBox(height: 6),
+
+//           /// CLIENT
 //           Text("Client: ${job.clientName}"),
+
+//           /// BUDGET
 //           Text("Budget: £${job.budgetMin} - £${job.budgetMax}"),
+
+//           /// TYPE
 //           Text("Type: ${job.jobType}"),
+
+//           /// STATUS
 //           StatusBadge(status: job.status),
+
 //           const SizedBox(height: 12),
 
+//           /// ACTION BUTTONS
 //           Wrap(
 //             spacing: 8,
 //             runSpacing: 8,
+
 //             children: [
-//               _MiniBtn(
-//                 text: "Approve",
-//                 bg: const Color(0xFF12B76A),
-//                 onTap: () => c.approveJob(job.id),
-//               ),
-//               _MiniBtn(
-//                 text: "Reject",
-//                 bg: const Color(0xFFF04438),
-//                 onTap: () => c.rejectJob(job.id),
-//               ),
-//               _MiniBtn(
-//                 text: "Proposals (${job.proposalsCount})",
-//                 bg: const Color(0xFF2F6BFF),
-//                 onTap: () {
-//                   Get.snackbar("Proposals", "Job: ${job.title}");
-//                 },
-//               ),
+
+//               /// APPROVE
+//          _MiniBtn(
+//   text: "Edit",
+//   bg: const Color(0xFF12B76A),
+//   onTap: () {
+
+//     Get.to(
+//       () => PostJob(),
+//       arguments: job, // job data pass
+//     );
+
+//   },
+// ),
+//               /// REJECT / CLOSE
+//         _MiniBtn(
+//   text: "Close",
+//   bg: const Color(0xFFF04438),
+//   onTap: () => c.closeJob(job.id),
+// ),
+
+//               /// PROPOSALS
+//            _MiniBtn(
+//   text: "Proposals (${job.proposalsCount})",
+//   bg: const Color(0xFF2F6BFF),
+//   onTap: () {
+
+// Get.to(
+//   () => const ClientProposalPage(),
+//   arguments: job.id,
+// );
+//   },
+// ),
+
 //             ],
 //           )
 //         ],
@@ -1111,6 +1125,93 @@ class _JobCard extends StatelessWidget {
 //     );
 //   }
 // }
+
+class _JobCard extends StatelessWidget {
+  final AdminJobModel job;
+  const _JobCard({required this.job});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Get.find<AdminJobsController>();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(.05),
+            blurRadius: 15,
+          )
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+
+          Text(
+            job.title,
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 17,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Text("Client: ${job.clientName}",
+              style: const TextStyle(color: Colors.grey)),
+
+          const SizedBox(height: 4),
+
+          Text("Budget: £${job.budgetMin} - £${job.budgetMax}",
+              style: const TextStyle(color: Colors.grey)),
+
+          const SizedBox(height: 4),
+
+          Text("Type: ${job.jobType}",
+              style: const TextStyle(color: Colors.grey)),
+
+          StatusBadge(status: job.status),
+
+          const SizedBox(height: 16),
+
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+
+              _MiniBtn(
+                text: "Edit",
+                bg: const Color(0xFF12B76A),
+                onTap: () {
+                  Get.to(() => PostJob(), arguments: job);
+                },
+              ),
+
+              _MiniBtn(
+                text: "Close",
+                bg: const Color(0xFFF04438),
+                onTap: () => c.closeJob(job.id),
+              ),
+
+              _MiniBtn(
+                text: "Proposals (${job.proposalsCount})",
+                bg: AppColors.primaryStart,
+                onTap: () {
+                  Get.to(() => const ClientProposalPage(),
+                      arguments: job.id);
+                },
+              ),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+}
 
 class StatusBadge extends StatelessWidget {
   final String status;

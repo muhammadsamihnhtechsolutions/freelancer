@@ -29,7 +29,14 @@ static const String baseUrl = "https://freelancesupermarket.hnhsofttechsolutions
       "$baseUrl/profiles/freelancer";
 
 
+  static const String clientProfile =
+      "$baseUrl/profiles/client";
 
+  /// GET CLIENT PROFILE
+  static const String getClientProfile =
+      "$baseUrl/profiles/client";
+  static const uploadLogo =
+    "https://freelancesupermarket.hnhsofttechsolutions.com/api/upload/logo";
   /// ==============================
   /// 🧑‍💼 CLIENT PROFILE
   /// ==============================
@@ -38,10 +45,30 @@ static const String baseUrl = "https://freelancesupermarket.hnhsofttechsolutions
   static const String clientProfileGet = '$baseUrl/profiles/client';
   static const String createJob = "$baseUrl/jobs";
 static const String getCategories = "$baseUrl/jobs/categories";
+  /// PROPOSALS BY JOB
+  static String jobProposals(String jobId) =>
+      "$baseUrl/proposals/job/$jobId";
 
 
 
+static String userReviews(String userId) =>
+    "$baseUrl/reviews/user/$userId";
 
+
+static String proposalStatus(String proposalId) =>
+    "$baseUrl/proposals/$proposalId/status";
+
+static String approveJobWork(String jobId) =>
+    "$baseUrl/jobs/$jobId/approve";
+
+      static const String clientJobs =
+      "$baseUrl/jobs/client";
+
+  /// PROPOSALS
+  static const String proposalsByJob =
+      "$baseUrl/proposals/job";
+
+}
   /// ==============================
   /// 📝 JOBS
   /// ==============================
@@ -54,49 +81,6 @@ static const String getCategories = "$baseUrl/jobs/categories";
 
   /// ==============================
   /// ⭐ REVIEWS
+  /// 
   /// ==============================
-  static const String freelancerReviews = '$baseUrl/reviews/freelancer';
-  static const String clientReviews = '$baseUrl/reviews/client';
-
-
-
-  /// ==============================
-  /// 💼 DASHBOARD / HOME
-  /// ==============================
-  static const String dashboardStats = '$baseUrl/dashboard/stats';
-  static const String recommendedJobs = '$baseUrl/jobs/recommended';
-  static const String recentActivity = '$baseUrl/activity/recent';
-
-
-
-  /// ==============================
-  /// 🏦 PAYMENTS / WALLET
-  /// ==============================
-  static const String walletBalance = '$baseUrl/wallet/balance';
-  static const String walletTransactions = '$baseUrl/wallet/transactions';
-  static const String walletWithdraw = '$baseUrl/wallet/withdraw';
-
-
-
-  /// ==============================
-  /// 🔔 NOTIFICATIONS
-  /// ==============================
-  static const String notifications = '$baseUrl/notifications';
-
-
-
-  /// ==============================
-  /// 📁 UPLOADS
-  /// ==============================
-  static const String uploadImage = '$baseUrl/upload/image';
-  static const String uploadDocument = '$baseUrl/upload/document';
-
-
-
-  /// ==============================
-  /// 🌐 STATIC PAGES
-  /// ==============================
-  static const String termsConditions = '$baseUrl/terms';
-  static const String privacyPolicy = '$baseUrl/privacy';
-  static const String aboutUs = '$baseUrl/about';
-}
+  /// 
