@@ -2,57 +2,56 @@ import 'package:freelancer_app/loginsignup/ClientProposal/ClientProposalModel.da
 import 'package:freelancer_app/service/Repo.dart';
 import 'package:get/get.dart';
 
+
 class ClientProposalController extends GetxController {
 
   RxBool loading = false.obs;
 
   RxList<ClientProposalModel> proposals = <ClientProposalModel>[].obs;
+
   Future<void> fetchProposals(String jobId) async {
 
-  try {
+    try {
 
-    print("🔵 fetchProposals CALLED → $jobId");
+      print("=================================");
+      print("🔵 fetchProposals CALLED → $jobId");
+      print("=================================");
 
-    loading.value = true;
+      loading.value = true;
 
-    final data =
-        await ClientProposalRepo.getJobProposals(jobId);
+      final data =
+          await ClientProposalRepo.getJobProposals(jobId);
 
-    print("📦 PROPOSALS RECEIVED → ${data.length}");
+      if (data == null) {
 
-    proposals.assignAll(data);
+        print("⚠️ PROPOSALS DATA IS NULL");
+        proposals.clear();
+        return;
+      }
 
-  } catch (e) {
+      if (data is List<ClientProposalModel>) {
 
-    print("❌ PROPOSAL ERROR → $e");
+        print("📦 PROPOSALS RECEIVED → ${data.length}");
 
-  } finally {
+        proposals.assignAll(data);
 
-    loading.value = false;
+      } else {
 
+        print("❌ UNEXPECTED DATA TYPE → ${data.runtimeType}");
+        proposals.clear();
+      }
+
+    } catch (e, stack) {
+
+      print("❌ PROPOSAL ERROR → $e");
+      print("📍 STACK TRACE → $stack");
+
+    } finally {
+
+      loading.value = false;
+
+      print("🟢 LOADING FALSE");
+      print("=================================");
+    }
   }
-}
-
-  // Future<void> fetchProposals(String jobId) async {
-    
-
-  //   try {
-
-  //     loading.value = true;
-
-  //     final data =
-  //         await ClientProposalRepo.getJobProposals(jobId);
-
-  //     proposals.assignAll(data);
-
-  //   } catch (e) {
-
-  //     print("❌ PROPOSAL ERROR → $e");
-
-  //   } finally {
-
-  //     loading.value = false;
-
-  //   }
-  // }
 }

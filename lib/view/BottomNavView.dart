@@ -3,8 +3,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:freelancer_app/controller/DashboardController.dart';
+import 'package:freelancer_app/frelancerprofileclientside/freelancerprofileclientside.dart';
 import 'package:freelancer_app/theme/AppColors.dart';
-import 'package:freelancer_app/view/Clientdashboard/BottomnavFreelancer.dart';
 import 'package:freelancer_app/view/Clientdashboard/ClientProfilePage.dart';
 import 'package:freelancer_app/view/Clientdashboard/HomeView.dart';
 import 'package:freelancer_app/view/Clientdashboard/JobPost/Jobs.dart' show AdminJobsPage;
@@ -18,8 +18,9 @@ class BottomNavView extends StatelessWidget {
 final DashboardController controller = Get.find<DashboardController>();
 final pages = [
   DashboardPage(),              // 0
-  AdminJobsPage(),              // 1
-  ClientFreelancerProfileUI(),  // 2
+  AdminJobsPage(),
+  FreelancerProfileClientSideUI
+(), // 2
   PostJob(),                // 3  ← Add this!
   ClientProfilePage(),          // 4
 ];

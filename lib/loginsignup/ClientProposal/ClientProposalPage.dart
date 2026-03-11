@@ -252,22 +252,22 @@ class _ClientProposalPageState extends State<ClientProposalPage> {
 
                   /// BUTTON
 GestureDetector(
-  onTap: () {
+onTap: () {
 
-    print("📌 View Details Clicked → ${p.id}");
+  print("📌 View Details Clicked → ${p.id}");
 
-    Get.to(() => ClientViewDetailsProposalPage(
-      proposalId: p.id,
-      // jobId: p.jobId,
-      freelancerName: p.freelancerName,
-      freelancerEmail: p.freelancerEmail,
-      status: p.status,
-      // coverLetter: p.coverLetter,
-      price: p.price.toString(),
-      deliveryDays: p.deliveryDays.toString(), jobId: '', coverLetter: '',
-    ));
+  Get.to(() => ClientViewDetailsProposalPage(
+    proposalId: p.id,
+    jobId: p.jobId,
+    freelancerName: p.freelancerName,
+    freelancerEmail: p.freelancerEmail,
+    status: p.status,
+    coverLetter: p.coverLetter,
+    price: p.price.toString(),
+    deliveryDays: p.deliveryDays.toString(),
+  ));
 
-  },
+},
   child: Container(
     height: 42,
     alignment: Alignment.center,

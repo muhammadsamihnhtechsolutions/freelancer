@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:freelancer_app/loginsignup/ClientProposal/ClientProposalModel.dart';
 import 'package:freelancer_app/loginsignup/ClientProposal/ClientViewDetailPropsaleController.dart';
 import 'package:get/get.dart';
 
@@ -19,6 +18,7 @@ class ClientViewDetailsProposalPage extends StatelessWidget {
 
   final ClientViewDetailsProposalController controller =
       Get.put(ClientViewDetailsProposalController());
+  
 
   final String proposalId;
   final String jobId;
@@ -183,40 +183,90 @@ class ClientViewDetailsProposalPage extends StatelessWidget {
             const Spacer(),
 
             /// BUTTONS
-            Row(
-              children: [
-
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                    ),
-
-                    onPressed: () {
-                      controller.acceptProposal(proposalId);
-                    },
-
-                    child: const Text("Accept"),
-                  ),
-                ),
-
-                const SizedBox(width: 10),
-
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                    ),
-
-                    onPressed: () {
-                      controller.rejectProposal(proposalId);
-                    },
-
-                    child: const Text("Reject"),
-                  ),
-                ),
-              ],
+            status.toLowerCase() == "accepted"
+    ? Obx(() {
+        return SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: controller.isApproved.value
+                  ? Colors.grey
+                  : Colors.blue,
             ),
+            onPressed: controller.isApproved.value
+                ? null
+                : () {
+                controller.approveWork(proposalId);
+                  },
+            child: controller.isApproving.value
+                ? const Text("Please wait approving...")
+                : controller.isApproved.value
+                    ? const Text("Approved ✅")
+                    : const Text("Approve"),
+          ),
+        );
+      })
+    : Row(
+        children: [
+          Expanded(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+              ),
+              onPressed: () {
+                controller.acceptProposal(proposalId);
+              },
+              child: const Text("Accept"),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              onPressed: () {
+                controller.rejectProposal(proposalId);
+              },
+              child: const Text("Reject"),
+            ),
+          ),
+        ],
+      )
+            // Row(
+            //   children: [
+
+            //     Expanded(
+            //       child: ElevatedButton(
+            //         style: ElevatedButton.styleFrom(
+            //           backgroundColor: Colors.green,
+            //         ),
+
+            //         onPressed: () {
+            //           controller.acceptProposal(proposalId);
+            //         },
+
+            //         child: const Text("Accept"),
+            //       ),
+            //     ),
+
+            //     const SizedBox(width: 10),
+
+            //     Expanded(
+            //       child: ElevatedButton(
+            //         style: ElevatedButton.styleFrom(
+            //           backgroundColor: Colors.red,
+            //         ),
+
+            //         onPressed: () {
+            //           controller.rejectProposal(proposalId);
+            //         },
+
+            //         child: const Text("Reject"),
+            //       ),
+            //     ),
+            //   ],
+            // ),
           ],
         ),
       ),

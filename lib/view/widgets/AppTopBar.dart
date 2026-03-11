@@ -153,6 +153,7 @@
 // }
 
 import 'package:flutter/material.dart';
+import 'package:freelancer_app/NotificationClientside/ClientSideNotificationPage.dart';
 import 'package:freelancer_app/controller/DashboardController.dart';
 import 'package:get/get.dart';
 import 'package:freelancer_app/theme/AppColors.dart';
@@ -206,9 +207,15 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
 
                 /// 🔔 Notification
                 InkWell(
-                  onTap: () {
-                    Get.toNamed("/notifications");
-                  },
+               onTap: () {
+  print("🔔 NAVIGATING WITH TRANSITION");
+
+  Get.to(
+    () => const ClientSideNotificationPage(),
+    transition: Transition.rightToLeft,
+    duration: const Duration(milliseconds: 300),
+  );
+},
                   borderRadius: BorderRadius.circular(50),
                   child: Container(
                     height: 40,

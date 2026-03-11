@@ -20,7 +20,7 @@ class ProposalDetailsView extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          "Proposal Details",
+          "Proposal Detail",
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
