@@ -1,6 +1,9 @@
 
 import 'package:freelancer_app/ClientProfilePage/ClientProfileCreatePage.dart';
+import 'package:freelancer_app/FreelancerDashboard/Freelancerprofile/FreelancerCreateProfileView.dart';
+import 'package:freelancer_app/FreelancerDashboard/Freelancerprofile/FreelancerProfileView.dart';
 import 'package:freelancer_app/FreelancerDashboard/freelancerbottomnav/FreelancerBottomNavView.dart' show FreelancerBottomNavView;
+import 'package:freelancer_app/FreelancerDashboard/myperposal/ViewProposal.dart';
 import 'package:freelancer_app/Routes/AppRoutes.dart';
 import 'package:freelancer_app/controller/DashboardController.dart';
 import 'package:freelancer_app/loginsignup/ClientProposal/ClientViewProPosalDetailPage.dart';
@@ -25,7 +28,20 @@ class AppPages {
     ),
 
 
-  
+  GetPage(
+  name: "/createFreelancerProfile",
+  page: () => FreelancerCreateProfileView(),
+),
+
+GetPage(
+  name: "/freelancerProfile",
+  page: () => FreelancerProfileScreen(),
+),
+
+    GetPage(
+      name: '/view-proposal',
+      page: () => const ViewProposal(),
+    ),
     GetPage(
       name: "/createClientProfile",
       page: () => CreateClientProfilePage(),
@@ -73,7 +89,9 @@ class AppPages {
     // ),
 
   GetPage(name: AppRoutes.FREELANCER_DASHBOARD, page: () => FreelancerBottomNavView()),
+  
   GetPage(name: AppRoutes.CLIENT_DASHBOARD, page: () => BottomNavView()),
+  
 
   ];
 }

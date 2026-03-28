@@ -71,7 +71,20 @@ static String approveJobWork(String jobId) =>
   static String approveProposal(String proposalId) =>
       "$proposals/$proposalId/approve";
 
+        static const String submitProposal =
+      "$baseUrl/proposals";
+
+  // freelancerside notificatio-all";
+  static const String Freelancernotifications = "$baseUrl/notifications";
+static const String markRead = "$baseUrl/notifications/read";
+static const String markAllRead = "$baseUrl/notifications/read-all";
+
+// freelancerside
+
+ static const String freelancerSubmitReview = "$baseUrl/reviews";
+
 }
+
   /// ==============================
   /// 📝 JOBS
   /// ==============================

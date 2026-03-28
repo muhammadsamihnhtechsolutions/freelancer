@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:freelancer_app/ClientProfilePage/ClientProfileModel.dart';
 import 'package:freelancer_app/FreelancerDashboard/Freelancerprofile/FreelancerProfileModel.dart';
+
+import 'package:freelancer_app/FreelancerReviewsubmitModel/FreelancerSubmitReviewModel.dart';
 import 'package:freelancer_app/loginsignup/ClientProposal/ClientProposalModel.dart';
 import 'package:freelancer_app/loginsignup/SignUpModel.dart';
 import 'package:freelancer_app/service/ApiConstant.dart' show ApiConstants;
@@ -82,6 +84,49 @@ class ProposalRepo {
     return list;
   }
 
+  static Future<dynamic> startWork(String jobId) async {
+
+    final url = "${ApiConstants.baseUrl}/proposals/$jobId/start";
+
+    print("--------------------------------------------------");
+    print("🚀 START WORK API CALL");
+    print("➡️ URL → $url");
+    print("--------------------------------------------------");
+
+    final res = await ApiService.patch(
+      url,
+      {},                     // ✅ EMPTY BODY REQUIRED
+      auth: true,             // ✅ TOKEN ENABLE
+      role: "freelancer",     // ✅ ROLE
+    );
+
+    print("⬇️ START WORK RESPONSE → $res");
+    print("✅ Work Started Successfully");
+
+    return res;
+  }
+
+static Future<dynamic> submitWork(String jobId) async {
+
+  final url = "${ApiConstants.baseUrl}/proposals/$jobId/submit";
+
+  print("--------------------------------------------------");
+  print("📤 SUBMIT WORK API CALL");
+  print("➡️ URL → $url");
+  print("--------------------------------------------------");
+
+  final res = await ApiService.patch(
+    url,
+    {},                     // ✅ EMPTY BODY (same as web)
+    auth: true,             // ✅ TOKEN ENABLE
+    role: "freelancer",     // ✅ ROLE SAME
+  );
+
+  print("⬇️ SUBMIT WORK RESPONSE → $res");
+  print("✅ Work Submitted Successfully");
+
+  return res;
+}
 }
 
 
@@ -278,16 +323,21 @@ class JobPostRepo {
     return res;
   }
 }
+
 class FreelancerProfileRepo {
 
-  /// 🔹 Get freelancer profile
-  static Future<FreelancerProfileModel> getFreelancerProfile() async {
+  /// =============================
+  /// GET PROFILE
+  /// =============================
+
+  static Future<FreelancerProfileModel?> getProfile() async {
 
     final url = ApiConstants.freelancerProfile;
 
-    print("-----------------------------------");
-    print("🔵 FETCHING FREELANCER PROFILE → $url");
-    print("-----------------------------------");
+    print("--------------------------------");
+    print("📡 GET FREELANCER PROFILE");
+    print("URL → $url");
+    print("--------------------------------");
 
     final res = await ApiService.get(
       url,
@@ -297,10 +347,67 @@ class FreelancerProfileRepo {
 
     print("⬇️ PROFILE RESPONSE → $res");
 
-    final data = res["data"];
+    if (res["data"] == null) {
 
-    return FreelancerProfileModel.fromJson(data);
+      print("⚠️ PROFILE DOES NOT EXIST");
 
+      return null;
+
+    }
+
+    return FreelancerProfileModel.fromJson(res["data"]);
+  }
+
+  /// =============================
+  /// CREATE PROFILE
+  /// =============================
+
+  static Future<FreelancerProfileModel?> createProfile(
+      FreelancerProfileModel profile) async {
+
+    final url = ApiConstants.freelancerProfile;
+
+    print("--------------------------------");
+    print("🟢 CREATE FREELANCER PROFILE");
+    print("BODY → ${profile.toJson()}");
+    print("--------------------------------");
+
+    final res = await ApiService.post(
+      url,
+      profile.toJson(),
+      auth: true,
+      role: "freelancer",
+    );
+
+    print("⬇️ CREATE RESPONSE → $res");
+
+    return FreelancerProfileModel.fromJson(res["data"]);
+  }
+
+  /// =============================
+  /// UPDATE PROFILE
+  /// =============================
+
+  static Future<FreelancerProfileModel?> updateProfile(
+      FreelancerProfileModel profile) async {
+
+    final url = ApiConstants.freelancerProfile;
+
+    print("--------------------------------");
+    print("🟡 UPDATE FREELANCER PROFILE");
+    print("BODY → ${profile.toJson()}");
+    print("--------------------------------");
+
+    final res = await ApiService.put(
+      url,
+      profile.toJson(),
+      auth: true,
+      role: "freelancer",
+    );
+
+    print("⬇️ UPDATE RESPONSE → $res");
+
+    return FreelancerProfileModel.fromJson(res["data"]);
   }
 
 }
@@ -356,11 +463,8 @@ class ClientProposalRepo {
     return proposals;
   }
 }
-
 class ReviewsRepo {
-
   static Future<List<ReviewModel>> getUserReviews(String userId) async {
-
     final url = ApiConstants.userReviews(userId);
 
     print("--------------------------------------------------");
@@ -379,45 +483,45 @@ class ReviewsRepo {
 
     /// SAFETY CHECK
     if (res == null) {
-
       print("❌ API RESPONSE NULL");
-
       return [];
     }
 
-    if (res['data'] == null) {
-
-      print("⚠️ DATA FIELD NULL");
-
+    if (res['reviews'] == null) {
+      print("⚠️ REVIEWS FIELD NULL");
       return [];
     }
 
-    final List list = res['data'];
+    if (res['reviews'] is! List) {
+      print("❌ REVIEWS FIELD IS NOT A LIST");
+      return [];
+    }
+
+    final List list = res['reviews'];
 
     print("📦 TOTAL REVIEWS RECEIVED → ${list.length}");
 
+    /// OPTIONAL STATS LOG
+    if (res['stats'] != null) {
+      print("⭐ STATS → ${res['stats']}");
+      print("⭐ TOTAL REVIEWS (API) → ${res['stats']['totalReviews']}");
+      print("⭐ AVG RATING (API) → ${res['stats']['avgRating']}");
+    }
+
     /// PARSE REVIEWS
     final reviews = list.map((e) {
-
       print("➡️ REVIEW ITEM → $e");
 
       try {
-
         final review = ReviewModel.fromJson(e);
 
-        print(
-            "✅ PARSED REVIEW → ${review.name} | Rating: ${review.rating}");
+        print("✅ PARSED REVIEW → ${review.name} | Rating: ${review.rating}");
 
         return review;
-
       } catch (err) {
-
         print("❌ REVIEW PARSE ERROR → $err");
-
         return null;
-
       }
-
     }).whereType<ReviewModel>().toList();
 
     print("--------------------------------------------------");
@@ -524,71 +628,38 @@ static Future<dynamic> updateProposalStatus(
     return updateProposalStatus(proposalId, "rejected");
   }
 
-  /// ==================================================
-  /// APPROVE WORK
-  /// POST /jobs/{jobId}/approve
-  /// ==================================================
-
-//   static Future<dynamic> approveWork(String jobId) async {
-
-//     final url = "${ApiConstants.baseUrl}/jobs/$jobId/approve";
-
-//     print("--------------------------------------------------");
-//     print("🟣 APPROVE WORK");
-//     print("➡️ JOB ID → $jobId");
-//     print("➡️ URL → $url");
-//     print("--------------------------------------------------");
-
-//     final res = await ApiService.post(
-//       url,
-//       {},                    // 👈 EMPTY BODY REQUIRED
-//       auth: true,
-//       role: "client",
-//     );
-
-//     print("⬇️ RAW RESPONSE → $res");
-
-//     return res;
-//   }
-// }
 // =========================================
   /// APPROVE WORK (LIVE PRODUCTION READY)
   /// =========================================
-  static Future<dynamic> approveWork(String proposalId) async {
+ static Future<dynamic> approveWork(String jobId) async {
+  final url = "${ApiConstants.baseUrl}/proposals/$jobId/approve";
 
-    final url =
-        "${ApiConstants.baseUrl}/proposals/$proposalId/approve";
+  print("--------------------------------------------------");
+  print("🟣 APPROVE WORK (PATCH)");
+  print("➡️ JOB ID → $jobId");
+  print("➡️ URL → $url");
+  print("--------------------------------------------------");
 
-    print("--------------------------------------------------");
-    print("🟣 APPROVE WORK (LIVE)");
-    print("➡️ PROPOSAL ID → $proposalId");
-    print("➡️ URL → $url");
-    print("--------------------------------------------------");
+  try {
+    final res = await ApiService.patch(
+      url,
+      {}, // empty body
+      auth: true,
+      role: "client",
+    );
 
-    try {
+    print("⬇️ APPROVE RESPONSE → $res");
 
-      final res = await ApiService.post(
-        url,
-        {}, // backend empty body expect karta hai
-        auth: true,
-        role: "client",
-      );
+    return res;
+  } catch (e) {
+    print("❌ APPROVE REPO ERROR → $e");
 
-      print("⬇️ APPROVE RESPONSE → $res");
-
-      return res;
-
-    } catch (e) {
-
-      print("❌ APPROVE REPO ERROR → $e");
-
-      return {
-        "success": false,
-        "message": e.toString(),
-      };
-    }
+    return {
+      "success": false,
+      "message": e.toString(),
+    };
   }
-  
+}
 }
 
 class DashboardRepo {
@@ -880,5 +951,328 @@ class ClientSideNotificationRepo {
     print("⬇️ NOTIFICATION RESPONSE → $res");
 
     return res;
+  }
+}
+
+class SubmitProposalRepo {
+  static Future<dynamic> submitProposal({
+    required Map<String, dynamic> body,
+    File? cvFile,
+  }) async {
+    final url = ApiConstants.submitProposal;
+
+    print("=================================");
+    print("🚀 SUBMIT PROPOSAL API");
+    print("➡️ URL → $url");
+    print("📤 BODY → $body");
+    print("📄 CV FILE NAME → ${cvFile?.path.split('/').last ?? "No CV"}");
+    print("📁 CV FILE PATH → ${cvFile?.path ?? "No CV"}");
+    print("=================================");
+
+    final res = await ApiService.multipartPost(
+      url,
+      body,
+      files: {
+        if (cvFile != null) "cv": cvFile,
+      },
+      auth: true,
+      role: "freelancer",
+    );
+
+    print("⬇️ SUBMIT PROPOSAL RESPONSE → $res");
+
+    return res;
+  }
+}
+
+// class SubmitProposalRepo {
+//   static Future<dynamic> submitProposal({
+//     required Map<String, dynamic> body,
+//     required File cvFile,
+//   }) async {
+//     final url = ApiConstants.submitProposal;
+
+//     print("=================================");
+//     print("🚀 SUBMIT PROPOSAL API");
+//     print("➡️ URL → $url");
+//     print("📤 BODY → $body");
+//     print("📄 CV FILE NAME → ${cvFile.path.split('/').last}");
+//     print("📁 CV FILE PATH → ${cvFile.path}");
+//     print("=================================");
+
+//     final res = await ApiService.multipartPost(
+//       url,
+//       body,
+//       files: {
+//         "cv": cvFile,
+//       },
+//       auth: true,
+//       role: "freelancer",
+//     );
+
+//     print("⬇️ SUBMIT PROPOSAL RESPONSE → $res");
+
+//     return res;
+//   }
+// }
+
+// class SubmitProposalRepo {
+
+//   static Future<dynamic> submitProposal(
+//     Map<String, dynamic> body,
+//   ) async {
+
+//     final url = ApiConstants.submitProposal;
+
+//     print("=================================");
+//     print("🚀 SUBMIT PROPOSAL API");
+//     print("➡️ URL → $url");
+//     print("📤 BODY → $body");
+//     print("=================================");
+
+//     final res = await ApiService.post(
+//       url,
+//       body,
+//       auth: true,
+//       role: "freelancer",
+//     );
+
+//     print("⬇️ SUBMIT PROPOSAL RESPONSE → $res");
+
+//     return res;
+//   }
+// }
+class FreelancerSideNotificationRepo {
+
+  // ---------------- FETCH ALL ----------------
+  static Future<dynamic> fetchNotifications() async {
+
+    final url = ApiConstants.Freelancernotifications;
+
+    print("=================================");
+    print("🔵 FETCHING FREELANCER NOTIFICATIONS");
+    print("➡️ URL → $url");
+    print("=================================");
+
+    final res = await ApiService.get(
+      url,
+      auth: true,
+      role: "freelancer",
+    );
+
+    print("⬇️ NOTIFICATION RESPONSE → $res");
+
+    return res;
+  }
+
+  // ---------------- MARK SINGLE READ ----------------
+  static Future<dynamic> markNotificationRead(int id) async {
+
+    final url = ApiConstants.markRead;
+
+    print("=================================");
+    print("🟢 MARK NOTIFICATION AS READ");
+    print("➡️ URL → $url");
+    print("📤 BODY → {id: $id}");
+    print("=================================");
+
+    final res = await ApiService.post(
+      url,
+      {
+        "id": id,
+      },
+      auth: true,
+      role: "freelancer",
+    );
+
+    print("⬇️ MARK READ RESPONSE → $res");
+
+    return res;
+  }
+
+  // ---------------- MARK ALL READ ----------------
+  static Future<dynamic> markAllNotificationsRead() async {
+
+    final url = ApiConstants.markAllRead;
+
+    print("=================================");
+    print("🟣 MARK ALL NOTIFICATIONS AS READ");
+    print("➡️ URL → $url");
+    print("=================================");
+
+    final res = await ApiService.post(
+      url,
+      {},
+      auth: true,
+      role: "freelancer",
+    );
+
+    print("⬇️ MARK ALL READ RESPONSE → $res");
+
+    return res;
+  }
+}
+
+// class FreelancerSubmitReviewRepo {
+//   /// ==================================================
+//   /// FREELANCER: SUBMIT REVIEW
+//   /// POST /reviews
+//   /// ==================================================
+//   static Future<Map<String, dynamic>> submitReview({
+//     required String jobId,
+//     required int rating,
+//     required String review,
+//   }) async {
+//     final url = ApiConstants.freelancerSubmitReview;
+
+//     final payload = {
+//       "jobId": jobId,
+//       "rating": rating,
+//       "review": review,
+//     };
+
+//     print("--------------------------------------------------");
+//     print("🟣 SUBMITTING REVIEW (FREELANCER)");
+//     print("➡️ URL → $url");
+//     print("📤 Payload → $payload");
+//     print("--------------------------------------------------");
+
+//     final res = await ApiService.post(
+//       url,
+//       payload,
+//       auth: true,
+//       role: "freelancer",
+//     );
+
+//     print("✅ REVIEW RESPONSE → $res");
+
+//     return {
+//       "message": res["message"] ?? "Review submitted successfully",
+//       "review": res["review"] != null
+//           ? FreelancerSubmitReviewModel.fromJson(res["review"])
+//           : null,
+//     };
+//   }
+// }
+
+class FreelancerSubmitReviewRepo {
+  static Future<dynamic> submitReview({
+    required String jobId,
+    required int rating,
+    required String review,
+  }) async {
+    final body = {
+      "jobId": jobId,
+      "rating": rating,
+      "review": review,
+    };
+
+    print("--------------------------------------------------");
+    print("🟣 SUBMIT REVIEW (POST)");
+    print("➡️ JOB ID => $jobId");
+    print("➡️ RATING => $rating");
+    print("➡️ REVIEW => $review");
+    print("➡️ BODY => $body");
+    print("--------------------------------------------------");
+
+    final res = await ApiService.post(
+      "${ApiConstants.baseUrl}/reviews",
+      body,
+      auth: true,
+      role: "freelancer",
+    );
+
+    return res;
+  }
+
+  static Future<dynamic> getReviews({
+    required String jobId,
+  }) async {
+    final url = "${ApiConstants.baseUrl}/reviews?jobId=$jobId";
+
+    print("--------------------------------------------------");
+    print("🟦 GET REVIEWS");
+    print("➡️ JOB ID => $jobId");
+    print("➡️ URL => $url");
+    print("--------------------------------------------------");
+
+    final res = await ApiService.get(
+      url,
+      auth: true,
+    );
+
+    return res;
+  }
+}
+
+class ClientSideReviewRepo {
+  static Future<dynamic> getReviews(String jobId) async {
+    final url = "${ApiConstants.baseUrl}/reviews?jobId=$jobId";
+
+    print("--------------------------------------------------");
+    print("🟦 GET REVIEWS");
+    print("➡️ JOB ID → $jobId");
+    print("➡️ URL → $url");
+    print("--------------------------------------------------");
+
+    try {
+      final res = await ApiService.get(
+        url,
+        auth: true,
+        role: "client",
+      );
+
+      print("⬇️ GET REVIEWS RESPONSE → $res");
+      return res;
+    } catch (e) {
+      print("❌ GET REVIEWS REPO ERROR → $e");
+      return {
+        "success": false,
+        "message": e.toString(),
+        "reviews": [],
+        "stats": {"totalReviews": 0, "avgRating": 0},
+      };
+    }
+  }
+
+  static Future<dynamic> submitReview({
+    required String jobId,
+    required int rating,
+    required String review,
+  }) async {
+    final url = "${ApiConstants.baseUrl}/reviews";
+
+    final body = {
+      "jobId": jobId,
+      "rating": rating,
+      "review": review,
+    };
+
+    print("--------------------------------------------------");
+    print("🟣 SUBMIT REVIEW (POST)");
+    print("➡️ JOB ID → $jobId");
+    print("➡️ RATING → $rating");
+    print("➡️ REVIEW → $review");
+    print("➡️ URL → $url");
+    print("➡️ BODY → $body");
+    print("--------------------------------------------------");
+
+    try {
+      final res = await ApiService.post(
+        url,
+        body,
+        auth: true,
+        role: "client",
+      );
+
+      print("⬇️ SUBMIT REVIEW RESPONSE → $res");
+      return res;
+    } catch (e) {
+      print("❌ SUBMIT REVIEW REPO ERROR → $e");
+      return {
+        "success": false,
+        "message": e.toString(),
+      };
+    }
   }
 }

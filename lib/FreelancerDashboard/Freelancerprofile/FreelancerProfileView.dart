@@ -1,305 +1,318 @@
+
+
 // import 'package:flutter/material.dart';
+// import 'package:get/get.dart';
+// import 'package:freelancer_app/FreelancerDashboard/Freelancerprofile/FreelancerProfileController.dart';
+// import 'package:freelancer_app/FreelancerDashboard/Freelancerprofile/FreelancerCreateProfileView.dart';
 // import 'package:freelancer_app/theme/AppColors.dart';
 
-// class FreelancerProfileView extends StatelessWidget {
-//   const FreelancerProfileView({super.key});
+// class FreelancerProfileScreen extends StatelessWidget {
+//   FreelancerProfileScreen({super.key});
+
+//   final controller = Get.find<FreelancerProfileController>();
 
 //   @override
 //   Widget build(BuildContext context) {
+
+//     print("🟡 FREELANCER PROFILE SCREEN BUILD");
+
 //     return Scaffold(
 //       backgroundColor: const Color(0xFFF4F6FA),
+
 //       body: SafeArea(
-//         child: SingleChildScrollView(
-//           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-//           child: Column(
-//             crossAxisAlignment: CrossAxisAlignment.start,
-//             children: [
-//               // TITLE
-//               const Text(
-//                 "My Profile",
-//                 style: TextStyle(
-//                   fontSize: 26,
-//                   fontWeight: FontWeight.w900,
-//                   letterSpacing: -0.5,
+//         child: Obx(() {
+
+//           if (controller.loading.value) {
+
+//             print("⏳ PROFILE LOADING");
+
+//             return const Center(child: CircularProgressIndicator());
+//           }
+
+//           final p = controller.profile.value;
+
+//           if (p == null) {
+
+//             print("⚠️ PROFILE DATA NULL");
+
+//             return const Center(child: Text("No profile found"));
+//           }
+
+//           print("🟢 PROFILE RENDERING");
+
+//           return SingleChildScrollView(
+//             padding: const EdgeInsets.all(18),
+
+//             child: Column(
+//               crossAxisAlignment: CrossAxisAlignment.start,
+
+//               children: [
+
+//                 const Text(
+//                   "My Profile",
+//                   style: TextStyle(
+//                     fontSize: 28,
+//                     fontWeight: FontWeight.w900,
+//                   ),
 //                 ),
-//               ),
 
-//               const SizedBox(height: 20),
+//                 const SizedBox(height: 20),
 
-//               // MAIN PROFILE CARD
-//               _profileCard(),
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
-//   }
+//                 Container(
+//                   width: double.infinity,
+//                   padding: const EdgeInsets.all(20),
 
-//   // -----------------------------
-//   // PROFILE CARD
-//   // -----------------------------
-//   Widget _profileCard() {
-//     return Container(
-//       width: double.infinity,
-//       padding: const EdgeInsets.all(18),
-//       decoration: BoxDecoration(
-//         color: Colors.white,
-//         borderRadius: BorderRadius.circular(18),
-//         boxShadow: [
-//           BoxShadow(
-//             color: Colors.black.withOpacity(0.05),
-//             blurRadius: 15,
-//             offset: const Offset(0, 6),
-//           ),
-//         ],
-//       ),
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           // TITLE + EDIT BUTTON
-//           Row(
-//             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//             children: [
-//               const Text(
-//                 "Profile Overview",
-//                 style: TextStyle(
-//                   fontSize: 18,
-//                   fontWeight: FontWeight.w800,
-//                 ),
-//               ),
+//                   decoration: BoxDecoration(
+//                     color: Colors.white,
+//                     borderRadius: BorderRadius.circular(20),
+//                     boxShadow: [
+//                       BoxShadow(
+//                         color: Colors.black.withOpacity(.05),
+//                         blurRadius: 20,
+//                         offset: const Offset(0,8),
+//                       )
+//                     ],
+//                   ),
 
-//               _editButton(),
-//             ],
-//           ),
+//                   child: Column(
+//                     crossAxisAlignment: CrossAxisAlignment.start,
+//                     children: [
 
-//           const SizedBox(height: 24),
+//                       /// HEADER
+//                       Row(
+//                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                         children: [
 
-//           // BIO SECTION
-//           const Text("Bio", style: _labelStyle),
-//           const SizedBox(height: 5),
-//           const Text(
-//             "Hi, I am a Flutter developer with strong web dev experience.",
-//             style: _valueStyle,
-//           ),
+//                           const Text(
+//                             "Profile Overview",
+//                             style: TextStyle(
+//                               fontSize: 18,
+//                               fontWeight: FontWeight.w800,
+//                             ),
+//                           ),
 
-//           const SizedBox(height: 18),
+//                           /// EDIT BUTTON
+//                           InkWell(
+//                             onTap: () {
 
-//           // EXPERIENCE
-//           const Text("Experience", style: _labelStyle),
-//           const SizedBox(height: 5),
-//           const Text("2 years", style: _valueStyle),
+//                               print("✏️ EDIT PROFILE CLICKED");
 
-//           const SizedBox(height: 18),
+//                               Get.to(
+//                                 FreelancerCreateProfileView(
+//                                   isEdit: true,
+//                                   profile: p,
+//                                 ),
+//                               );
+//                             },
 
-//           // SKILLS
-//           const Text("Skills", style: _labelStyle),
-//           const SizedBox(height: 10),
-//           Wrap(
-//             spacing: 8,
-//             runSpacing: 8,
-//             children: [
-//               _skillChip("React"),
-//               _skillChip("SEO"),
-//               _skillChip("JavaScript"),
-//               _skillChip("AI"),
-//               _skillChip("CSS AI"),
-//             ],
-//           ),
+//                             child: Container(
+//                               padding: const EdgeInsets.symmetric(
+//                                   horizontal: 14,
+//                                   vertical: 8),
 
-//           const SizedBox(height: 20),
+//                               decoration: BoxDecoration(
+//                                 gradient: LinearGradient(
+//                                   colors: [
+//                                     AppColors.primaryStart,
+//                                     AppColors.primaryEnd,
+//                                   ],
+//                                 ),
+//                                 borderRadius: BorderRadius.circular(12),
+//                               ),
 
-//           // PORTFOLIO LINK
-//           const Text("Portfolio", style: _labelStyle),
-//           const SizedBox(height: 8),
+//                               child: const Row(
+//                                 children: [
 
-//           Container(
-//             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-//             decoration: BoxDecoration(
-//               color: const Color(0xFFF3F5F9),
-//               borderRadius: BorderRadius.circular(12),
+//                                   Icon(Icons.edit,
+//                                       color: Colors.white,
+//                                       size: 16),
+
+//                                   SizedBox(width: 6),
+
+//                                   Text(
+//                                     "Edit",
+//                                     style: TextStyle(
+//                                       color: Colors.white,
+//                                       fontWeight: FontWeight.w700,
+//                                     ),
+//                                   )
+//                                 ],
+//                               ),
+//                             ),
+//                           )
+//                         ],
+//                       ),
+
+//                       const SizedBox(height: 25),
+
+//                       /// BIO
+//                       const Text("Bio", style: _labelStyle),
+//                       const SizedBox(height: 6),
+
+//                       Text(p.bio, style: _valueStyle),
+
+//                       const SizedBox(height: 20),
+
+//                       /// EXPERIENCE
+//                       const Text("Experience", style: _labelStyle),
+//                       const SizedBox(height: 6),
+
+//                       Text("${p.experience} years", style: _valueStyle),
+
+//                       const SizedBox(height: 20),
+
+//                       /// SKILLS
+//                       const Text("Skills", style: _labelStyle),
+//                       const SizedBox(height: 10),
+
+//                       Wrap(
+//                         spacing: 8,
+//                         runSpacing: 8,
+
+//                         children: p.skills
+//                             .split(",")
+//                             .map(
+//                               (skill) => Container(
+//                                 padding: const EdgeInsets.symmetric(
+//                                     horizontal: 14,
+//                                     vertical: 8),
+
+//                                 decoration: BoxDecoration(
+//                                   color: AppColors.primaryStart.withOpacity(.1),
+//                                   borderRadius: BorderRadius.circular(20),
+//                                 ),
+
+//                                 child: Text(
+//                                   skill.trim(),
+//                                   style: TextStyle(
+//                                     color: AppColors.primaryStart,
+//                                     fontWeight: FontWeight.w600,
+//                                   ),
+//                                 ),
+//                               ),
+//                             )
+//                             .toList(),
+//                       ),
+
+//                       const SizedBox(height: 20),
+
+//                       /// PORTFOLIO
+//                       const Text("Portfolio", style: _labelStyle),
+
+//                       const SizedBox(height: 8),
+
+//                       Container(
+//                         padding: const EdgeInsets.all(12),
+
+//                         decoration: BoxDecoration(
+//                           color: const Color(0xFFF3F5F9),
+//                           borderRadius: BorderRadius.circular(12),
+//                         ),
+
+//                         child: Text(
+//                           p.portfolioLinks,
+//                           style: const TextStyle(
+//                             color: Colors.blue,
+//                             fontWeight: FontWeight.w600,
+//                           ),
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                 )
+//               ],
 //             ),
-//             child: const Text(
-//               "https://portfolio.com/myprofile",
-//               style: TextStyle(
-//                 color: Colors.blue,
-//                 fontWeight: FontWeight.w600,
-//                 fontSize: 14,
-//               ),
-//             ),
-//           ),
-
-//           const SizedBox(height: 14),
-//         ],
-//       ),
-//     );
-//   }
-
-//   // -----------------------------
-//   // EDIT BUTTON
-//   // -----------------------------
-//   Widget _editButton() {
-//     return Container(
-//       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-//       decoration: BoxDecoration(
-//         gradient: LinearGradient(
-//           colors: [
-//             AppColors.primaryStart,
-//             AppColors.primaryEnd,
-//           ],
-//         ),
-//         borderRadius: BorderRadius.circular(12),
-//         boxShadow: [
-//           BoxShadow(
-//             color: AppColors.primaryStart.withOpacity(0.3),
-//             blurRadius: 12,
-//             offset: const Offset(0, 4),
-//           ),
-//         ],
-//       ),
-//       child: Row(
-//         children: const [
-//           Icon(Icons.edit, color: Colors.white, size: 16),
-//           SizedBox(width: 6),
-//           Text(
-//             "Edit",
-//             style: TextStyle(
-//               color: Colors.white,
-//               fontWeight: FontWeight.w700,
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   // -----------------------------
-//   // SKILL CHIP
-//   // -----------------------------
-//   Widget _skillChip(String label) {
-//     return Container(
-//       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-//       decoration: BoxDecoration(
-//         color: AppColors.primaryStart.withOpacity(0.08),
-//         borderRadius: BorderRadius.circular(18),
-//       ),
-//       child: Text(
-//         label,
-//         style: TextStyle(
-//           color: AppColors.primaryStart,
-//           fontWeight: FontWeight.w600,
-//           fontSize: 13,
-//         ),
+//           );
+//         }),
 //       ),
 //     );
 //   }
 // }
 
-// // -----------------------------
-// // TEXT STYLES
-// // -----------------------------
 // const _labelStyle = TextStyle(
 //   fontSize: 14,
 //   fontWeight: FontWeight.w800,
-//   color: Colors.black87,
 // );
 
 // const _valueStyle = TextStyle(
 //   fontSize: 14,
-//   color: Colors.black87,
 //   height: 1.4,
 // );
-
 import 'package:flutter/material.dart';
+import 'package:freelancer_app/loginsignup/LogoutController.dart';
 import 'package:get/get.dart';
 import 'package:freelancer_app/FreelancerDashboard/Freelancerprofile/FreelancerProfileController.dart';
+import 'package:freelancer_app/FreelancerDashboard/Freelancerprofile/FreelancerCreateProfileView.dart';
 import 'package:freelancer_app/theme/AppColors.dart';
 
 class FreelancerProfileScreen extends StatelessWidget {
   FreelancerProfileScreen({super.key});
 
-  final controller = Get.put(FreelancerProfileController());
+  final controller = Get.find<FreelancerProfileController>();
+
+  final LogoutController logoutController =
+      Get.isRegistered<LogoutController>()
+          ? Get.find<LogoutController>()
+          : Get.put(LogoutController());
 
   @override
   Widget build(BuildContext context) {
-
     print("🟡 FREELANCER PROFILE SCREEN BUILD");
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6FA),
-
       body: SafeArea(
-
         child: Obx(() {
-
-          if(controller.loading.value){
-
+          if (controller.loading.value) {
             print("⏳ PROFILE LOADING");
-
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           final p = controller.profile.value;
 
-          if(p == null){
-
+          if (p == null) {
             print("⚠️ PROFILE DATA NULL");
-
-            return const Center(
-              child: Text("No profile found"),
-            );
+            return const Center(child: Text("No profile found"));
           }
 
           print("🟢 PROFILE RENDERING");
 
           return SingleChildScrollView(
-
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-
+            padding: const EdgeInsets.all(18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-
               children: [
-
-                /// TITLE
                 const Text(
                   "My Profile",
                   style: TextStyle(
-                    fontSize: 26,
+                    fontSize: 28,
                     fontWeight: FontWeight.w900,
-                    letterSpacing: -0.5,
                   ),
                 ),
 
                 const SizedBox(height: 20),
 
-                /// PROFILE CARD
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(18),
-
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 15,
-                        offset: const Offset(0, 6),
-                      ),
+                        color: Colors.black.withOpacity(.05),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      )
                     ],
                   ),
-
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-
                       /// HEADER
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-
                           const Text(
                             "Profile Overview",
                             style: TextStyle(
@@ -309,101 +322,92 @@ class FreelancerProfileScreen extends StatelessWidget {
                           ),
 
                           /// EDIT BUTTON
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 8),
+                          InkWell(
+                            onTap: () {
+                              print("✏️ EDIT PROFILE CLICKED");
 
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  AppColors.primaryStart,
-                                  AppColors.primaryEnd,
+                              Get.to(
+                                FreelancerCreateProfileView(
+                                  isEdit: true,
+                                  profile: p,
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    AppColors.primaryStart,
+                                    AppColors.primaryEnd,
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(
+                                    Icons.edit,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    "Edit",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  )
                                 ],
                               ),
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primaryStart.withOpacity(.3),
-                                  blurRadius: 12,
-                                  offset: const Offset(0,4),
-                                )
-                              ],
-                            ),
-
-                            child: Row(
-                              children: const [
-
-                                Icon(Icons.edit,
-                                    color: Colors.white,
-                                    size: 16),
-
-                                SizedBox(width: 6),
-
-                                Text(
-                                  "Edit",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                )
-                              ],
                             ),
                           )
                         ],
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 25),
 
                       /// BIO
                       const Text("Bio", style: _labelStyle),
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 6),
+                      Text(p.bio, style: _valueStyle),
 
-                      Text(
-                        p.bio,
-                        style: _valueStyle,
-                      ),
-
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 20),
 
                       /// EXPERIENCE
                       const Text("Experience", style: _labelStyle),
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 6),
+                      Text("${p.experience} years", style: _valueStyle),
 
-                      Text(
-                        "${p.experience} years",
-                        style: _valueStyle,
-                      ),
-
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 20),
 
                       /// SKILLS
                       const Text("Skills", style: _labelStyle),
                       const SizedBox(height: 10),
-
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-
                         children: p.skills
                             .split(",")
                             .map(
                               (skill) => Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 8),
-
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryStart.withOpacity(.08),
-                                  borderRadius: BorderRadius.circular(18),
+                                  horizontal: 14,
+                                  vertical: 8,
                                 ),
-
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryStart.withOpacity(.1),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
                                 child: Text(
                                   skill.trim(),
                                   style: TextStyle(
                                     color: AppColors.primaryStart,
                                     fontWeight: FontWeight.w600,
-                                    fontSize: 13,
                                   ),
                                 ),
                               ),
@@ -415,33 +419,69 @@ class FreelancerProfileScreen extends StatelessWidget {
 
                       /// PORTFOLIO
                       const Text("Portfolio", style: _labelStyle),
-
                       const SizedBox(height: 8),
-
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12),
-
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF3F5F9),
                           borderRadius: BorderRadius.circular(12),
                         ),
-
                         child: Text(
                           p.portfolioLinks,
                           style: const TextStyle(
                             color: Colors.blue,
                             fontWeight: FontWeight.w600,
-                            fontSize: 14,
                           ),
                         ),
                       ),
-
-                      const SizedBox(height: 14),
                     ],
                   ),
-                )
+                ),
+
+                const SizedBox(height: 24),
+
+                /// LOGOUT BUTTON
+                InkWell(
+                  onTap: () async {
+                    print("🚪 FREELANCER LOGOUT CLICKED");
+                    await logoutController.logoutUser();
+                  },
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.red.withOpacity(.18),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.logout,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          "Logout",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           );
@@ -451,16 +491,12 @@ class FreelancerProfileScreen extends StatelessWidget {
   }
 }
 
-/// TEXT STYLES
-
 const _labelStyle = TextStyle(
   fontSize: 14,
   fontWeight: FontWeight.w800,
-  color: Colors.black87,
 );
 
 const _valueStyle = TextStyle(
   fontSize: 14,
-  color: Colors.black87,
   height: 1.4,
 );

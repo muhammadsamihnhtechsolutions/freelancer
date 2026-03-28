@@ -15,7 +15,8 @@ import 'Clientdashboard/PostJobPage.dart';
 
 class BottomNavView extends StatelessWidget {
   BottomNavView({super.key});
-final DashboardController controller = Get.find<DashboardController>();
+  final DashboardController controller = Get.put(DashboardController());
+// final DashboardController controller = Get.find<DashboardController>();
 final pages = [
   DashboardPage(),              // 0
   AdminJobsPage(),

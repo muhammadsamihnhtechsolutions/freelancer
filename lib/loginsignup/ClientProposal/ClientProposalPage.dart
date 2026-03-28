@@ -256,16 +256,27 @@ onTap: () {
 
   print("📌 View Details Clicked → ${p.id}");
 
+  // Get.to(() => ClientViewDetailsProposalPage(
+  //   proposalId: p.id,
+  //   jobId: p.jobId,
+  //   freelancerName: p.freelancerName,
+  //   freelancerEmail: p.freelancerEmail,
+  //   status: p.status,
+  //   coverLetter: p.coverLetter,
+  //   price: p.price.toString(),
+  //   deliveryDays: p.deliveryDays.toString(),
+  // ));
   Get.to(() => ClientViewDetailsProposalPage(
-    proposalId: p.id,
-    jobId: p.jobId,
-    freelancerName: p.freelancerName,
-    freelancerEmail: p.freelancerEmail,
-    status: p.status,
-    coverLetter: p.coverLetter,
-    price: p.price.toString(),
-    deliveryDays: p.deliveryDays.toString(),
-  ));
+  proposalId: p.id,
+  jobId: p.jobId,
+  freelancerName: p.freelancerName,
+  freelancerEmail: p.freelancerEmail,
+  status: p.status,
+  coverLetter: p.coverLetter,
+  price: p.price.toString(),
+  deliveryDays: p.deliveryDays.toString(),
+  workStatus: p.workStatus,
+));
 
 },
   child: Container(

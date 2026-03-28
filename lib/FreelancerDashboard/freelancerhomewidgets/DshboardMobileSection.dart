@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:get/get.dart';
+import 'package:freelancer_app/FreelancerDashboard/Freelancerprofile/FreelancerProfileController.dart';
 
 class DashboardMobileSection extends StatelessWidget {
   const DashboardMobileSection({super.key});
@@ -91,71 +93,80 @@ class DashboardMobileSection extends StatelessWidget {
   // -------------------------
   // Profile Strength (Fixed)
   // -------------------------
-  Widget _profileStrengthCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          const Text(
-            "Profile Strength",
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
+ Widget _profileStrengthCard() {
+
+  final FreelancerProfileController controller =
+      Get.find<FreelancerProfileController>();
+
+  return Obx(() => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-          ),
-          const SizedBox(height: 14),
+          ],
+        ),
+        child: Column(
+          children: [
 
-          // FIXED PERFECT CENTERED CIRCLE
-          
-          SizedBox(
-            height: 120,
-            width: 120,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-           Transform.scale(
-  scale: 1.4, // ← inner circle ko bada karta hai (increase this value)
-  child: CircularProgressIndicator(
-    value: 0.75,
-    strokeWidth: 10,
-    backgroundColor: Colors.grey.shade200,
-    valueColor: const AlwaysStoppedAnimation(Color(0xFF5A5BFF)),
-  ),
-),
-                const Text(
-                  "100%",
-                  style: TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.bold),
-                ),
-              ],
+            const Text(
+              "Profile Strength",
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+              ),
             ),
-          ),
 
+            const SizedBox(height: 14),
 
-          const SizedBox(height: 10),
+            SizedBox(
+              height: 120,
+              width: 120,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
 
-          Text(
-            "Complete profile →",
-            style: TextStyle(
-              color: Colors.indigo.shade600,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
+                  Transform.scale(
+                    scale: 1.4,
+                    child: CircularProgressIndicator(
+                      value: controller.profileStrength,
+                      strokeWidth: 10,
+                      backgroundColor: Colors.grey.shade200,
+                      valueColor: const AlwaysStoppedAnimation(
+                        Color(0xFF5A5BFF),
+                      ),
+                    ),
+                  ),
+
+                  Text(
+               controller.profileStrength.toString()
+                  .replaceAll("0.", ""),
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
+
+            const SizedBox(height: 10),
+
+            Text(
+              "Complete profile →",
+              style: TextStyle(
+                color: Colors.indigo.shade600,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ));
+}
 }

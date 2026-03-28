@@ -11,5 +11,6 @@ class AppRoutes {
     static const clientProposalDetails = "/clientProposalDetails";
        static const createClientProfile = "/createClientProfile";
   static const clientProfile = "/profile";
+    // static const clientProfile = "createFreelancerProfile";
 
 }

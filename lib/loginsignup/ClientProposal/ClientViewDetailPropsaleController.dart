@@ -187,157 +187,345 @@
 //   }
 // }
 
+
+// import 'package:freelancer_app/service/Repo.dart';
+// import 'package:get/get.dart';
+
+// class ClientViewDetailsProposalController extends GetxController {
+
+//   RxBool isLoading = false.obs;
+
+//   /// 🔥 NEW STATES FOR APPROVE FLOW
+//   RxBool isApproving = false.obs;
+//   RxBool isApproved = false.obs;
+
+//   /// ==================================================
+//   /// ACCEPT PROPOSAL
+//   /// ==================================================
+//   Future<void> acceptProposal(String proposalId) async {
+
+//     print("--------------------------------------------------");
+//     print("🚀 ACCEPT PROPOSAL BUTTON CLICKED");
+//     print("➡️ PROPOSAL ID RECEIVED → $proposalId");
+//     print("--------------------------------------------------");
+
+//     if (proposalId.isEmpty) {
+//       Get.snackbar("Error", "Invalid proposal ID");
+//       return;
+//     }
+
+//     try {
+
+//       isLoading.value = true;
+
+//       final res =
+//           await ClientViewDetailsProposalRepo.acceptProposal(proposalId);
+
+//       isLoading.value = false;
+
+//       if (res != null && res["success"] == true) {
+
+//         Get.snackbar("Success", "Proposal Accepted");
+
+//       } else {
+
+//         Get.snackbar("Error", res?["message"] ?? "Failed to accept proposal");
+//       }
+
+//     } catch (e) {
+
+//       isLoading.value = false;
+
+//       Get.snackbar("Error", "Something went wrong");
+//     }
+//   }
+
+//   /// ==================================================
+//   /// REJECT PROPOSAL
+//   /// ==================================================
+//   Future<void> rejectProposal(String proposalId) async {
+
+//     if (proposalId.isEmpty) {
+//       Get.snackbar("Error", "Invalid proposal ID");
+//       return;
+//     }
+
+//     try {
+
+//       isLoading.value = true;
+
+//       final res =
+//           await ClientViewDetailsProposalRepo.rejectProposal(proposalId);
+
+//       isLoading.value = false;
+
+//       if (res != null && res["success"] == true) {
+
+//         Get.snackbar("Success", "Proposal Rejected");
+
+//       } else {
+
+//         Get.snackbar("Error", res?["message"] ?? "Failed to reject proposal");
+//       }
+
+//     } catch (e) {
+
+//       isLoading.value = false;
+
+//       Get.snackbar("Error", "Something went wrong");
+//     }
+//   }
+
+//   /// ==================================================
+//   /// APPROVE WORK (FINAL FLOW)
+//   /// ==================================================
+// Future<void> approveWork(String proposalId) async {
+
+//   print("--------------------------------------------------");
+//   print("🚀 APPROVE WORK BUTTON CLICKED");
+//   print("➡️ PROPOSAL ID RECEIVED → $proposalId");
+//   print("--------------------------------------------------");
+
+//   if (proposalId.isEmpty) {
+//     Get.snackbar("Error", "Invalid proposal ID");
+//     return;
+//   }
+
+//   if (isApproved.value) {
+//     print("ℹ️ Already Approved - Skipping API Call");
+//     return;
+//   }
+
+//   try {
+
+//     isApproving.value = true;
+
+//     final res =
+//         await ClientViewDetailsProposalRepo.approveWork(proposalId);
+
+//     print("⬇️ APPROVE RESPONSE → $res");
+
+//     /// 👇 Backend kabhi nested data bhi bhej sakta hai
+//     final bool success =
+//         (res is Map && (res["success"] == true ||
+//         res["data"]?["success"] == true));
+
+//     if (success) {
+
+//       isApproved.value = true;
+
+//       final message =
+//           res["message"] ??
+//           res["data"]?["message"] ??
+//           "Work Approved Successfully";
+
+//       print("✅ WORK APPROVED SUCCESSFULLY");
+
+//       Get.snackbar("Success", message);
+
+//     } else {
+
+//       final message =
+//           res?["message"] ??
+//           res?["data"]?["message"] ??
+//           "Failed to approve work";
+
+//       print("❌ APPROVE FAILED → $message");
+
+//       Get.snackbar("Error", message);
+//     }
+
+//   } catch (e) {
+
+//     print("❌ APPROVE ERROR → $e");
+
+//     Get.snackbar("Error", "Something went wrong");
+
+//   } finally {
+
+//     isApproving.value = false;
+//   }
+
+//   print("--------------------------------------------------");
+// }
+// }
 import 'package:freelancer_app/service/Repo.dart';
 import 'package:get/get.dart';
 
 class ClientViewDetailsProposalController extends GetxController {
-
   RxBool isLoading = false.obs;
-
-  /// 🔥 NEW STATES FOR APPROVE FLOW
   RxBool isApproving = false.obs;
   RxBool isApproved = false.obs;
 
-  /// ==================================================
-  /// ACCEPT PROPOSAL
-  /// ==================================================
-  Future<void> acceptProposal(String proposalId) async {
-
+  Future<bool> acceptProposal(String proposalId) async {
     print("--------------------------------------------------");
     print("🚀 ACCEPT PROPOSAL BUTTON CLICKED");
     print("➡️ PROPOSAL ID RECEIVED → $proposalId");
     print("--------------------------------------------------");
 
     if (proposalId.isEmpty) {
+      print("❌ ACCEPT ERROR → INVALID PROPOSAL ID");
       Get.snackbar("Error", "Invalid proposal ID");
-      return;
+      return false;
     }
 
     try {
-
       isLoading.value = true;
 
       final res =
           await ClientViewDetailsProposalRepo.acceptProposal(proposalId);
 
-      isLoading.value = false;
+      print("⬇️ ACCEPT RESPONSE → $res");
 
-      if (res != null && res["success"] == true) {
+      final bool success =
+          res != null &&
+          (res["success"] == true || res["data"]?["success"] == true);
 
-        Get.snackbar("Success", "Proposal Accepted");
+      if (success) {
+        final message =
+            res["message"] ??
+            res["data"]?["message"] ??
+            "Proposal Accepted";
 
+        print("✅ ACCEPT SUCCESS → $message");
+        Get.snackbar("Success", message);
+        return true;
       } else {
+        final message =
+            res?["message"] ??
+            res?["data"]?["message"] ??
+            "Failed to accept proposal";
 
-        Get.snackbar("Error", res?["message"] ?? "Failed to accept proposal");
+        print("❌ ACCEPT FAILED → $message");
+        Get.snackbar("Error", message);
+        return false;
       }
-
     } catch (e) {
-
-      isLoading.value = false;
-
+      print("❌ ACCEPT EXCEPTION → $e");
       Get.snackbar("Error", "Something went wrong");
+      return false;
+    } finally {
+      isLoading.value = false;
+      print("--------------------------------------------------");
     }
   }
 
-  /// ==================================================
-  /// REJECT PROPOSAL
-  /// ==================================================
-  Future<void> rejectProposal(String proposalId) async {
+  Future<bool> rejectProposal(String proposalId) async {
+    print("--------------------------------------------------");
+    print("🚀 REJECT PROPOSAL BUTTON CLICKED");
+    print("➡️ PROPOSAL ID RECEIVED → $proposalId");
+    print("--------------------------------------------------");
 
     if (proposalId.isEmpty) {
+      print("❌ REJECT ERROR → INVALID PROPOSAL ID");
       Get.snackbar("Error", "Invalid proposal ID");
-      return;
+      return false;
     }
 
     try {
-
       isLoading.value = true;
 
       final res =
           await ClientViewDetailsProposalRepo.rejectProposal(proposalId);
 
-      isLoading.value = false;
+      print("⬇️ REJECT RESPONSE → $res");
 
-      if (res != null && res["success"] == true) {
+      final bool success =
+          res != null &&
+          (res["success"] == true || res["data"]?["success"] == true);
 
-        Get.snackbar("Success", "Proposal Rejected");
+      if (success) {
+        final message =
+            res["message"] ??
+            res["data"]?["message"] ??
+            "Proposal Rejected";
 
+        print("✅ REJECT SUCCESS → $message");
+        Get.snackbar("Success", message);
+        return true;
       } else {
+        final message =
+            res?["message"] ??
+            res?["data"]?["message"] ??
+            "Failed to reject proposal";
 
-        Get.snackbar("Error", res?["message"] ?? "Failed to reject proposal");
+        print("❌ REJECT FAILED → $message");
+        Get.snackbar("Error", message);
+        return false;
       }
-
     } catch (e) {
-
-      isLoading.value = false;
-
+      print("❌ REJECT EXCEPTION → $e");
       Get.snackbar("Error", "Something went wrong");
+      return false;
+    } finally {
+      isLoading.value = false;
+      print("--------------------------------------------------");
     }
   }
 
-  /// ==================================================
-  /// APPROVE WORK (FINAL FLOW)
-  /// ==================================================
-  Future<void> approveWork(String proposalId) async {
+  Future<bool> approveWork(String jobId) async {
+    print("--------------------------------------------------");
+    print("🚀 APPROVE WORK BUTTON CLICKED");
+    print("➡️ JOB ID RECEIVED → $jobId");
+    print("--------------------------------------------------");
 
-  print("--------------------------------------------------");
-  print("🚀 APPROVE WORK BUTTON CLICKED");
-  print("➡️ PROPOSAL ID RECEIVED → $proposalId");
-  print("--------------------------------------------------");
-
-  if (proposalId.isEmpty) {
-    Get.snackbar("Error", "Invalid proposal ID");
-    return;
-  }
-
-  /// Already approved guard (extra safety)
-  if (isApproved.value) {
-    print("ℹ️ Already Approved - Skipping API Call");
-    return;
-  }
-
-  try {
-
-    isApproving.value = true;
-
-    final res =
-        await ClientViewDetailsProposalRepo.approveWork(proposalId);
-
-    print("⬇️ APPROVE RESPONSE → $res");
-
-    if (res is Map && res["success"] == true) {
-
-      isApproved.value = true;
-
-      print("✅ WORK APPROVED SUCCESSFULLY");
-
-      Get.snackbar(
-        "Success",
-        res["message"] ?? "Work Approved Successfully",
-      );
-
-    } else {
-
-      print("❌ APPROVE FAILED → ${res?["message"]}");
-
-      Get.snackbar(
-        "Error",
-        res?["message"] ?? "Failed to approve work",
-      );
+    if (jobId.isEmpty) {
+      print("❌ APPROVE ERROR → INVALID JOB ID");
+      Get.snackbar("Error", "Invalid job ID");
+      return false;
     }
 
-  } catch (e) {
+    if (isApproved.value) {
+      print("ℹ️ Already Approved - Skipping API Call");
+      return true;
+    }
 
-    print("❌ APPROVE ERROR → $e");
+    try {
+      isApproving.value = true;
 
-    Get.snackbar("Error", "Something went wrong");
+      final res = await ClientViewDetailsProposalRepo.approveWork(jobId);
 
-  } finally {
+      print("⬇️ APPROVE RESPONSE → $res");
 
-    isApproving.value = false;
+      final bool success =
+          res != null &&
+          (res["success"] == true || res["data"]?["success"] == true);
 
+      if (success) {
+        isApproved.value = true;
+
+        final message =
+            res["message"] ??
+            res["data"]?["message"] ??
+            "Work Approved Successfully";
+
+        print("✅ WORK APPROVED SUCCESSFULLY → $message");
+        print("➡️ isApproved → ${isApproved.value}");
+
+        Get.snackbar("Success", message);
+        return true;
+      } else {
+        final message =
+            res?["message"] ??
+            res?["data"]?["message"] ??
+            "Failed to approve work";
+
+        print("❌ APPROVE FAILED → $message");
+        print("➡️ isApproved → ${isApproved.value}");
+
+        Get.snackbar("Error", message);
+        return false;
+      }
+    } catch (e) {
+      print("❌ APPROVE EXCEPTION → $e");
+      print("➡️ isApproved → ${isApproved.value}");
+      Get.snackbar("Error", "Something went wrong");
+      return false;
+    } finally {
+      isApproving.value = false;
+      print("🔄 APPROVE LOADING ENDED");
+      print("➡️ isApproving → ${isApproving.value}");
+      print("--------------------------------------------------");
+    }
   }
-
-  print("--------------------------------------------------");
-}
 }
