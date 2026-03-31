@@ -184,6 +184,9 @@ class ApiService {
     return null;
   }
 
+static Future<String?> getTokenByRole(String? role) async {
+  return await _getToken(role);
+}
   /// ----------------------------------------------------
   /// COMMON HEADERS
   /// ----------------------------------------------------

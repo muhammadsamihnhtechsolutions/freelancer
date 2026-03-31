@@ -15,7 +15,8 @@ static const String baseUrl = "https://freelancesupermarket.hnhsofttechsolutions
   static const String resetPassword = '$baseUrl/auth/reset-password';
   static const String getMe = '$baseUrl/users/me';
 
-
+  static String clientGetReviews(String userId) =>
+      "$baseUrl/reviews/user/$userId";
 
 
     /// 🔹 Freelancer Profile

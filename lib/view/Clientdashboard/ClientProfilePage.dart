@@ -439,6 +439,7 @@ class ClientProfilePage extends StatelessWidget {
   ClientProfilePage({super.key});
 
   final controller = Get.find<ClientProfileController>();
+  
 
   @override
   Widget build(BuildContext context) {

@@ -206,23 +206,49 @@ class LoginController extends GetxController {
         throw Exception("Token not received from API");
       }
 
+      // final prefs = await SharedPreferences.getInstance();
+
+      // // active/current role update karo
+      // await prefs.setString("current_role", role);
+      // await prefs.setString("full_name", data.user.fullName);
+
+      // // role-based token save
+      // if (role == "client") {
+      //   await prefs.remove("client_token");
+      //   await prefs.setString("client_token", data.token);
+      // } else if (role == "freelancer") {
+      //   await prefs.remove("freelancer_token");
+      //   await prefs.setString("freelancer_token", data.token);
+      // } else {
+      //   throw Exception("Unknown role: $role");
+      // }
       final prefs = await SharedPreferences.getInstance();
 
-      // active/current role update karo
-      await prefs.setString("current_role", role);
-      await prefs.setString("full_name", data.user.fullName);
+await prefs.setString("current_role", role);
+await prefs.setString("full_name", data.user.fullName);
 
-      // role-based token save
-      if (role == "client") {
-        await prefs.remove("client_token");
-        await prefs.setString("client_token", data.token);
-      } else if (role == "freelancer") {
-        await prefs.remove("freelancer_token");
-        await prefs.setString("freelancer_token", data.token);
-      } else {
-        throw Exception("Unknown role: $role");
-      }
+if (role == "client") {
+  await prefs.remove("client_token");
+  await prefs.remove("client_id");
 
+  await prefs.setString("client_token", data.token);
+  await prefs.setString("client_id", data.user.id.toString());
+
+} else if (role == "freelancer") {
+  await prefs.remove("freelancer_token");
+  await prefs.remove("freelancer_id");
+
+  await prefs.setString("freelancer_token", data.token);
+  await prefs.setString("freelancer_id", data.user.id.toString());
+}
+
+debugPrint("======================================");
+debugPrint("💾 SAVED LOGIN DATA");
+debugPrint("➡️ ROLE => $role");
+debugPrint("➡️ USER ID => ${data.user.id}");
+debugPrint("➡️ client_id => ${prefs.getString("client_id")}");
+debugPrint("➡️ freelancer_id => ${prefs.getString("freelancer_id")}");
+debugPrint("======================================");
       debugPrint("✅ current_role => ${prefs.getString("current_role")}");
       debugPrint("✅ client_token => ${prefs.getString("client_token")}");
       debugPrint("✅ freelancer_token => ${prefs.getString("freelancer_token")}");

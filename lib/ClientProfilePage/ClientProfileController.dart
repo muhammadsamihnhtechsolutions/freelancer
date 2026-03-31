@@ -10,13 +10,21 @@
 //   /// ==============================
 //   /// STATE
 //   /// ==============================
+
 //   final isLoading = false.obs;
 //   final isCheckingProfile = false.obs;
+//   final isLogoUploading = false.obs;
 
 //   /// PROFILE DATA
 //   final profile = {}.obs;
 
+//   /// LOGO URL
+//   final logoUrl = "".obs;
+
+//   /// ==============================
 //   /// FORM CONTROLLERS
+//   /// ==============================
+
 //   final companyNameCtrl = TextEditingController();
 //   final websiteCtrl = TextEditingController();
 //   final sizeCtrl = TextEditingController();
@@ -30,6 +38,7 @@
 //   /// ==============================
 //   /// INIT
 //   /// ==============================
+
 //   @override
 //   void onInit() {
 //     print("==================================================");
@@ -44,6 +53,7 @@
 //   /// ==============================
 //   /// CHECK PROFILE AFTER LOGIN
 //   /// ==============================
+
 //   Future<void> checkProfile() async {
 
 //     print("==================================================");
@@ -63,6 +73,7 @@
 //         print("✅ PROFILE FOUND");
 
 //         profile.value = res["data"];
+//         logoUrl.value = res["data"]["logo"] ?? "";
 
 //         _fillProfileData(res["data"]);
 
@@ -73,13 +84,11 @@
 //         print("⚠️ PROFILE NOT FOUND → Redirecting to create profile");
 
 //         Get.offAllNamed("/createProfile");
-
 //       }
 
 //     } catch (e) {
 
 //       print("❌ CHECK PROFILE ERROR → $e");
-
 //       Get.offAllNamed("/createProfile");
 
 //     } finally {
@@ -89,57 +98,77 @@
 //       print("==================================================");
 //       print("🔚 CHECK PROFILE END");
 //       print("==================================================");
-
 //     }
 //   }
 
-//   /// ==============================
-//   /// FETCH PROFILE
-//   /// ==============================
+
+
+ 
 //   Future<void> fetchProfile() async {
 
-//     print("==================================================");
-//     print("📥 FETCH CLIENT PROFILE START");
-//     print("==================================================");
+//   print("==================================================");
+//   print("📥 FETCH CLIENT PROFILE START");
+//   print("==================================================");
 
-//     try {
+//   try {
 
-//       final res = await ClientProfileRepo.getClientProfile();
+//     final res = await ClientProfileRepo.getClientProfile();
 
-//       print("⬇️ FETCH RESPONSE → $res");
+//     print("⬇️ FETCH RESPONSE → $res");
 
-//       if (res != null && res["success"] == true && res["data"] != null) {
+//     if (res != null && res["success"] == true && res["data"] != null) {
 
-//         print("✅ PROFILE RECEIVED FROM API");
+//       print("✅ PROFILE RECEIVED FROM API");
 
-//         profile.value = res["data"];
+//       profile.value = res["data"];
 
-//         print("📦 PROFILE STORED IN CONTROLLER → ${profile.value}");
+//       /// 🔥 LOGO FIX PART (VERY IMPORTANT)
+//    final logoPath = res["data"]["logo"] ?? "";
 
-//         _fillProfileData(res["data"]);
+// if (logoPath.isNotEmpty) {
 
-//       } else {
+//   if (logoPath.startsWith("http")) {
+//     /// Already full URL
+//     logoUrl.value = logoPath;
+//   } else {
+//     /// Relative path
+//     logoUrl.value =
+//         "https://freelancesupermarket.hnhsofttechsolutions.com$logoPath";
+//   }
 
-//         print("⚠️ PROFILE NOT FOUND FROM API");
+//   print("🖼️ LOGO URL SET → ${logoUrl.value}");
 
-//         profile.clear();
+// } else {
+//   logoUrl.value = "";
+// }
 
-//       }
+//       print("📦 PROFILE STORED IN CONTROLLER → ${profile.value}");
+//       print("🖼️ LOGO URL STORED IN CONTROLLER → ${logoUrl.value}");
 
-//     } catch (e) {
+//       _fillProfileData(res["data"]);
 
-//       print("❌ FETCH PROFILE ERROR → $e");
+//     } else {
 
+//       print("⚠️ PROFILE NOT FOUND FROM API");
+
+//       profile.clear();
+//       logoUrl.value = "";
 //     }
 
-//     print("==================================================");
-//     print("🔚 FETCH CLIENT PROFILE END");
-//     print("==================================================");
+//   } catch (e) {
+
+//     print("❌ FETCH PROFILE ERROR → $e");
 //   }
+
+//   print("==================================================");
+//   print("🔚 FETCH CLIENT PROFILE END");
+//   print("==================================================");
+// }
 
 //   /// ==============================
 //   /// AUTO FILL FORM
 //   /// ==============================
+
 //   void _fillProfileData(Map data) {
 
 //     print("==================================================");
@@ -161,8 +190,9 @@
 //   }
 
 //   /// ==============================
-//   /// SAVE PROFILE
+//   /// SAVE PROFILE (CREATE / UPDATE)
 //   /// ==============================
+
 //   Future<void> saveProfile({required bool isEdit}) async {
 
 //     print("==================================================");
@@ -173,21 +203,9 @@
 
 //       isLoading.value = true;
 
-//       /// Decide create or update automatically
 //       bool isEdit = profile.isNotEmpty;
 
 //       print("📝 EDIT MODE → $isEdit");
-
-//       print("📌 FORM DATA");
-//       print("Company Name → ${companyNameCtrl.text}");
-//       print("Website → ${websiteCtrl.text}");
-//       print("Company Size → ${sizeCtrl.text}");
-//       print("Email → ${emailCtrl.text}");
-//       print("LinkedIn → ${linkedinCtrl.text}");
-//       print("Industry → ${industryCtrl.text}");
-//       print("Location → ${locationCtrl.text}");
-//       print("Phone → ${phoneCtrl.text}");
-//       print("Description → ${descriptionCtrl.text}");
 
 //       final model = ClientProfileModel(
 //         companyName: companyNameCtrl.text,
@@ -199,13 +217,13 @@
 //         location: locationCtrl.text,
 //         phone: phoneCtrl.text,
 //         description: descriptionCtrl.text,
+//         logo: logoUrl.value, // IMPORTANT
 //       );
 
-//       print("--------------------------------------------------");
-//       print("📦 MODEL JSON DATA → ${model.toJson()}");
-//       print("--------------------------------------------------");
+//       print("📦 MODEL JSON → ${model.toJson()}");
 
-//       final res = await ClientProfileRepo.saveClientProfile(model, isEdit);
+//       final res =
+//           await ClientProfileRepo.saveClientProfile(model, isEdit);
 
 //       print("⬇️ SAVE PROFILE RESPONSE → $res");
 
@@ -216,25 +234,21 @@
 //         Get.snackbar("Success", "Profile saved successfully");
 
 //         await fetchProfile();
-
 //         Get.back();
-     
 
 //       } else {
 
-//         print("❌ API ERROR → ${res?["message"]}");
+//         print("❌ SAVE ERROR → ${res?["message"]}");
 
 //         Get.snackbar(
 //           "Error",
 //           res?["message"] ?? "Profile save failed",
 //         );
-
 //       }
 
 //     } catch (e) {
 
 //       print("❌ SAVE PROFILE EXCEPTION → $e");
-
 //       Get.snackbar("Error", e.toString());
 
 //     } finally {
@@ -244,19 +258,110 @@
 //       print("==================================================");
 //       print("🏁 SAVE PROFILE END");
 //       print("==================================================");
-
 //     }
+//   }
+
+//   /// ==============================
+//   /// UPDATE LOGO ONLY
+//   /// ==============================
+// Future<void> updateLogo(String uploadedUrl) async {
+
+//   print("==================================================");
+//   print("🖼️ UPDATE LOGO START");
+//   print("==================================================");
+
+//   try {
+
+//     isLogoUploading.value = true;
+
+//     print("🖼️ RAW UPLOADED URL → $uploadedUrl");
+
+//     /// 🔥 Ensure relative path for backend
+//     String relativePath = uploadedUrl;
+
+//     if (uploadedUrl.startsWith("http")) {
+//       final uri = Uri.parse(uploadedUrl);
+//       relativePath = uri.path;
+//     }
+
+//     print("📁 RELATIVE PATH → $relativePath");
+
+//     /// 👇 Backend ko relative path bhejna
+//     final model = ClientProfileModel(
+//       logo: relativePath,
+//     );
+
+//     print("📦 LOGO MODEL JSON → ${model.toJson()}");
+
+//     final res =
+//         await ClientProfileRepo.saveClientProfile(model, true);
+
+//     print("⬇️ UPDATE LOGO RESPONSE → $res");
+
+//     if (res != null && res["success"] == true) {
+
+//       print("✅ LOGO UPDATED SUCCESSFULLY");
+
+//       /// 🔥 UI ke liye full URL set karo
+//       logoUrl.value =
+//           "https://freelancesupermarket.hnhsofttechsolutions.com$relativePath";
+
+//       Get.snackbar("Success", "Logo updated successfully");
+
+//       await fetchProfile();
+
+//     } else {
+
+//       print("❌ LOGO UPDATE FAILED → ${res?["message"]}");
+
+//       Get.snackbar(
+//         "Error",
+//         res?["message"] ?? "Logo update failed",
+//       );
+//     }
+
+//   } catch (e) {
+
+//     print("❌ LOGO UPDATE EXCEPTION → $e");
+
+//   } finally {
+
+//     isLogoUploading.value = false;
+
+//     print("==================================================");
+//     print("🏁 UPDATE LOGO END");
+//     print("==================================================");
 //   }
 // }
 
 
+//   /// ==============================
+//   /// DISPOSE
+//   /// ==============================
+
+//   @override
+//   void onClose() {
+//     companyNameCtrl.dispose();
+//     websiteCtrl.dispose();
+//     sizeCtrl.dispose();
+//     emailCtrl.dispose();
+//     linkedinCtrl.dispose();
+//     industryCtrl.dispose();
+//     locationCtrl.dispose();
+//     phoneCtrl.dispose();
+//     descriptionCtrl.dispose();
+//     super.onClose();
+//   }
+// }
+
 import 'package:flutter/material.dart';
 import 'package:freelancer_app/ClientProfilePage/ClientProfileModel.dart';
+import 'package:freelancer_app/graphweeklyrecntlyclient.dart/GraphActivityController.dart';
 import 'package:freelancer_app/service/Repo.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ClientProfileController extends GetxController {
-
   /// ==============================
   /// STATE
   /// ==============================
@@ -305,13 +410,11 @@ class ClientProfileController extends GetxController {
   /// ==============================
 
   Future<void> checkProfile() async {
-
     print("==================================================");
     print("🔍 CHECK PROFILE START");
     print("==================================================");
 
     try {
-
       isCheckingProfile.value = true;
 
       final res = await ClientProfileRepo.getClientProfile();
@@ -319,30 +422,24 @@ class ClientProfileController extends GetxController {
       print("⬇️ CHECK PROFILE RESPONSE → $res");
 
       if (res != null && res["success"] == true && res["data"] != null) {
-
         print("✅ PROFILE FOUND");
 
         profile.value = res["data"];
         logoUrl.value = res["data"]["logo"] ?? "";
 
         _fillProfileData(res["data"]);
+        await _triggerGraphLoad(res["data"]);
 
         Get.offAllNamed("/profile");
-
       } else {
-
         print("⚠️ PROFILE NOT FOUND → Redirecting to create profile");
 
         Get.offAllNamed("/createProfile");
       }
-
     } catch (e) {
-
       print("❌ CHECK PROFILE ERROR → $e");
       Get.offAllNamed("/createProfile");
-
     } finally {
-
       isCheckingProfile.value = false;
 
       print("==================================================");
@@ -351,117 +448,101 @@ class ClientProfileController extends GetxController {
     }
   }
 
-  /// ==============================
-  /// FETCH PROFILE
-  /// ==============================
-
-  // Future<void> fetchProfile() async {
-
-  //   print("==================================================");
-  //   print("📥 FETCH CLIENT PROFILE START");
-  //   print("==================================================");
-
-  //   try {
-
-  //     final res = await ClientProfileRepo.getClientProfile();
-
-  //     print("⬇️ FETCH RESPONSE → $res");
-
-  //     if (res != null && res["success"] == true && res["data"] != null) {
-
-  //       print("✅ PROFILE RECEIVED FROM API");
-
-  //       profile.value = res["data"];
-  //       logoUrl.value = res["data"]["logo"] ?? "";
-
-  //       print("📦 PROFILE STORED → ${profile.value}");
-  //       print("🖼️ LOGO URL STORED → ${logoUrl.value}");
-
-  //       _fillProfileData(res["data"]);
-
-  //     } else {
-
-  //       print("⚠️ PROFILE NOT FOUND FROM API");
-  //       profile.clear();
-  //       logoUrl.value = "";
-  //     }
-
-  //   } catch (e) {
-
-  //     print("❌ FETCH PROFILE ERROR → $e");
-  //   }
-
-  //   print("==================================================");
-  //   print("🔚 FETCH CLIENT PROFILE END");
-  //   print("==================================================");
-  // }
   Future<void> fetchProfile() async {
+    print("==================================================");
+    print("📥 FETCH CLIENT PROFILE START");
+    print("==================================================");
 
-  print("==================================================");
-  print("📥 FETCH CLIENT PROFILE START");
-  print("==================================================");
+    try {
+      final res = await ClientProfileRepo.getClientProfile();
 
-  try {
+      print("⬇️ FETCH RESPONSE → $res");
 
-    final res = await ClientProfileRepo.getClientProfile();
+      if (res != null && res["success"] == true && res["data"] != null) {
+        print("✅ PROFILE RECEIVED FROM API");
 
-    print("⬇️ FETCH RESPONSE → $res");
+        profile.value = res["data"];
 
-    if (res != null && res["success"] == true && res["data"] != null) {
+        /// 🔥 LOGO FIX PART (VERY IMPORTANT)
+        final logoPath = res["data"]["logo"] ?? "";
 
-      print("✅ PROFILE RECEIVED FROM API");
+        if (logoPath.isNotEmpty) {
+          if (logoPath.startsWith("http")) {
+            /// Already full URL
+            logoUrl.value = logoPath;
+          } else {
+            /// Relative path
+            logoUrl.value =
+                "https://freelancesupermarket.hnhsofttechsolutions.com$logoPath";
+          }
 
-      profile.value = res["data"];
+          print("🖼️ LOGO URL SET → ${logoUrl.value}");
+        } else {
+          logoUrl.value = "";
+        }
 
-      /// 🔥 LOGO FIX PART (VERY IMPORTANT)
-   final logoPath = res["data"]["logo"] ?? "";
+        print("📦 PROFILE STORED IN CONTROLLER → ${profile.value}");
+        print("🖼️ LOGO URL STORED IN CONTROLLER → ${logoUrl.value}");
 
-if (logoPath.isNotEmpty) {
+        _fillProfileData(res["data"]);
+        await _triggerGraphLoad(res["data"]);
+      } else {
+        print("⚠️ PROFILE NOT FOUND FROM API");
 
-  if (logoPath.startsWith("http")) {
-    /// Already full URL
-    logoUrl.value = logoPath;
-  } else {
-    /// Relative path
-    logoUrl.value =
-        "https://freelancesupermarket.hnhsofttechsolutions.com$logoPath";
-  }
-
-  print("🖼️ LOGO URL SET → ${logoUrl.value}");
-
-} else {
-  logoUrl.value = "";
-}
-
-      print("📦 PROFILE STORED IN CONTROLLER → ${profile.value}");
-      print("🖼️ LOGO URL STORED IN CONTROLLER → ${logoUrl.value}");
-
-      _fillProfileData(res["data"]);
-
-    } else {
-
-      print("⚠️ PROFILE NOT FOUND FROM API");
-
-      profile.clear();
-      logoUrl.value = "";
+        profile.clear();
+        logoUrl.value = "";
+      }
+    } catch (e) {
+      print("❌ FETCH PROFILE ERROR → $e");
     }
 
-  } catch (e) {
-
-    print("❌ FETCH PROFILE ERROR → $e");
+    print("==================================================");
+    print("🔚 FETCH CLIENT PROFILE END");
+    print("==================================================");
   }
 
-  print("==================================================");
-  print("🔚 FETCH CLIENT PROFILE END");
-  print("==================================================");
-}
+  /// ==============================
+  /// GRAPH TRIGGER
+  /// ==============================
+
+  Future<void> _triggerGraphLoad(Map data) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      final clientId = (data["user_id"] ??
+              data["client_id"] ??
+              data["id"] ??
+              prefs.getString("client_id") ??
+              prefs.getString("user_id") ??
+              "")
+          .toString()
+          .trim();
+
+      print("==================================================");
+      print("📊 GRAPH LOAD CHECK");
+      print("👤 CLIENT ID FOR GRAPH → $clientId");
+      print("==================================================");
+
+      if (clientId.isEmpty) {
+        print("⚠️ CLIENT ID NOT FOUND, GRAPH NOT LOADED");
+        return;
+      }
+
+      final graphController = Get.isRegistered<GraphActivityController>()
+          ? Get.find<GraphActivityController>()
+          : Get.put(GraphActivityController());
+
+      await graphController.loadGraphActivity(clientId);
+    } catch (e) {
+      print("❌ GRAPH LOAD TRIGGER ERROR → $e");
+    }
+  }
 
   /// ==============================
   /// AUTO FILL FORM
   /// ==============================
 
   void _fillProfileData(Map data) {
-
     print("==================================================");
     print("📥 AUTO FILLING FORM DATA");
     print("==================================================");
@@ -485,13 +566,11 @@ if (logoPath.isNotEmpty) {
   /// ==============================
 
   Future<void> saveProfile({required bool isEdit}) async {
-
     print("==================================================");
     print("🚀 SAVE PROFILE START");
     print("==================================================");
 
     try {
-
       isLoading.value = true;
 
       bool isEdit = profile.isNotEmpty;
@@ -513,22 +592,18 @@ if (logoPath.isNotEmpty) {
 
       print("📦 MODEL JSON → ${model.toJson()}");
 
-      final res =
-          await ClientProfileRepo.saveClientProfile(model, isEdit);
+      final res = await ClientProfileRepo.saveClientProfile(model, isEdit);
 
       print("⬇️ SAVE PROFILE RESPONSE → $res");
 
       if (res != null && res["success"] == true) {
-
         print("✅ PROFILE SAVED SUCCESSFULLY");
 
         Get.snackbar("Success", "Profile saved successfully");
 
         await fetchProfile();
         Get.back();
-
       } else {
-
         print("❌ SAVE ERROR → ${res?["message"]}");
 
         Get.snackbar(
@@ -536,14 +611,10 @@ if (logoPath.isNotEmpty) {
           res?["message"] ?? "Profile save failed",
         );
       }
-
     } catch (e) {
-
       print("❌ SAVE PROFILE EXCEPTION → $e");
       Get.snackbar("Error", e.toString());
-
     } finally {
-
       isLoading.value = false;
 
       print("==================================================");
@@ -555,76 +626,66 @@ if (logoPath.isNotEmpty) {
   /// ==============================
   /// UPDATE LOGO ONLY
   /// ==============================
-Future<void> updateLogo(String uploadedUrl) async {
 
-  print("==================================================");
-  print("🖼️ UPDATE LOGO START");
-  print("==================================================");
+  Future<void> updateLogo(String uploadedUrl) async {
+    print("==================================================");
+    print("🖼️ UPDATE LOGO START");
+    print("==================================================");
 
-  try {
+    try {
+      isLogoUploading.value = true;
 
-    isLogoUploading.value = true;
+      print("🖼️ RAW UPLOADED URL → $uploadedUrl");
 
-    print("🖼️ RAW UPLOADED URL → $uploadedUrl");
+      /// 🔥 Ensure relative path for backend
+      String relativePath = uploadedUrl;
 
-    /// 🔥 Ensure relative path for backend
-    String relativePath = uploadedUrl;
+      if (uploadedUrl.startsWith("http")) {
+        final uri = Uri.parse(uploadedUrl);
+        relativePath = uri.path;
+      }
 
-    if (uploadedUrl.startsWith("http")) {
-      final uri = Uri.parse(uploadedUrl);
-      relativePath = uri.path;
-    }
+      print("📁 RELATIVE PATH → $relativePath");
 
-    print("📁 RELATIVE PATH → $relativePath");
-
-    /// 👇 Backend ko relative path bhejna
-    final model = ClientProfileModel(
-      logo: relativePath,
-    );
-
-    print("📦 LOGO MODEL JSON → ${model.toJson()}");
-
-    final res =
-        await ClientProfileRepo.saveClientProfile(model, true);
-
-    print("⬇️ UPDATE LOGO RESPONSE → $res");
-
-    if (res != null && res["success"] == true) {
-
-      print("✅ LOGO UPDATED SUCCESSFULLY");
-
-      /// 🔥 UI ke liye full URL set karo
-      logoUrl.value =
-          "https://freelancesupermarket.hnhsofttechsolutions.com$relativePath";
-
-      Get.snackbar("Success", "Logo updated successfully");
-
-      await fetchProfile();
-
-    } else {
-
-      print("❌ LOGO UPDATE FAILED → ${res?["message"]}");
-
-      Get.snackbar(
-        "Error",
-        res?["message"] ?? "Logo update failed",
+      /// 👇 Backend ko relative path bhejna
+      final model = ClientProfileModel(
+        logo: relativePath,
       );
+
+      print("📦 LOGO MODEL JSON → ${model.toJson()}");
+
+      final res = await ClientProfileRepo.saveClientProfile(model, true);
+
+      print("⬇️ UPDATE LOGO RESPONSE → $res");
+
+      if (res != null && res["success"] == true) {
+        print("✅ LOGO UPDATED SUCCESSFULLY");
+
+        /// 🔥 UI ke liye full URL set karo
+        logoUrl.value =
+            "https://freelancesupermarket.hnhsofttechsolutions.com$relativePath";
+
+        Get.snackbar("Success", "Logo updated successfully");
+
+        await fetchProfile();
+      } else {
+        print("❌ LOGO UPDATE FAILED → ${res?["message"]}");
+
+        Get.snackbar(
+          "Error",
+          res?["message"] ?? "Logo update failed",
+        );
+      }
+    } catch (e) {
+      print("❌ LOGO UPDATE EXCEPTION → $e");
+    } finally {
+      isLogoUploading.value = false;
+
+      print("==================================================");
+      print("🏁 UPDATE LOGO END");
+      print("==================================================");
     }
-
-  } catch (e) {
-
-    print("❌ LOGO UPDATE EXCEPTION → $e");
-
-  } finally {
-
-    isLogoUploading.value = false;
-
-    print("==================================================");
-    print("🏁 UPDATE LOGO END");
-    print("==================================================");
   }
-}
-
 
   /// ==============================
   /// DISPOSE

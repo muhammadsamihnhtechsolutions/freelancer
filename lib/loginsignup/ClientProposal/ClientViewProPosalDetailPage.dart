@@ -1,5 +1,6 @@
 
 // import 'package:flutter/material.dart';
+// import 'package:freelancer_app/clientsideReview/ClientSideReviewController.dart';
 // import 'package:freelancer_app/loginsignup/ClientProposal/ClientViewDetailPropsaleController.dart';
 // import 'package:get/get.dart';
 
@@ -35,6 +36,7 @@
 // class _ClientViewDetailsProposalPageState
 //     extends State<ClientViewDetailsProposalPage> {
 //   late final ClientViewDetailsProposalController controller;
+//   late final ClientSideReviewController clientSideReviewController;
 
 //   late final RxString currentProposalStatus;
 //   late final RxString currentWorkStatus;
@@ -42,12 +44,7 @@
 //   final RxBool isAccepting = false.obs;
 //   final RxBool isRejecting = false.obs;
 //   final RxBool isApprovingLocal = false.obs;
-//   final RxBool isSubmittingReview = false.obs;
-//   final RxBool isReviewSubmitted = false.obs;
 //   final RxBool showReviewForm = false.obs;
-
-//   final TextEditingController reviewController = TextEditingController();
-//   final RxInt selectedRating = 0.obs;
 
 //   @override
 //   void initState() {
@@ -62,12 +59,23 @@
 //             tag: widget.proposalId,
 //           );
 
+//     clientSideReviewController =
+//         Get.isRegistered<ClientSideReviewController>(tag: widget.jobId)
+//             ? Get.find<ClientSideReviewController>(tag: widget.jobId)
+//             : Get.put(
+//                 ClientSideReviewController(),
+//                 tag: widget.jobId,
+//               );
+
 //     currentProposalStatus = _normalizeProposalStatus(widget.status).obs;
 //     currentWorkStatus = _normalizeWorkStatus(widget.workStatus).obs;
 
-//     /// agar page completed status ke sath khule to review form bhi show ho sakta hai
 //     showReviewForm.value = currentProposalStatus.value == "completed" ||
 //         currentWorkStatus.value == "completed";
+
+//     if (showReviewForm.value) {
+//       clientSideReviewController.loadReviews(jobId: widget.jobId);
+//     }
 
 //     debugPrint("📄 OPEN PROPOSAL DETAIL PAGE");
 //     debugPrint("➡️ INITIAL PROPOSAL STATUS → ${widget.status}");
@@ -216,9 +224,9 @@
 //         currentProposalStatus.value = "completed";
 //         currentWorkStatus.value = "completed";
 //         showReviewForm.value = true;
-//         isReviewSubmitted.value = false;
-//         reviewController.clear();
-//         selectedRating.value = 0;
+
+//         clientSideReviewController.clearForm();
+//         await clientSideReviewController.loadReviews(jobId: widget.jobId);
 
 //         Get.snackbar(
 //           "Success",
@@ -238,47 +246,25 @@
 //     }
 //   }
 
-//   void _submitReviewLocally() {
-//     final rating = selectedRating.value;
-//     final review = reviewController.text.trim();
+// Future<void> _submitReviewApi() async {
+//   final success = await clientSideReviewController.submitReview(
+//     jobId: widget.jobId,
+//   );
 
-//     if (rating <= 0) {
-//       Get.snackbar(
-//         "Error",
-//         "Please select rating",
-//         snackPosition: SnackPosition.BOTTOM,
+//   if (success) {
+//     final submitted = clientSideReviewController.submittedReview.value;
+
+//     if (submitted != null) {
+//       clientSideReviewController.setSubmittedReviewUi(
+//         rating: submitted.rating,
+//         reviewText: submitted.review,
 //       );
-//       return;
 //     }
 
-//     if (review.isEmpty) {
-//       Get.snackbar(
-//         "Error",
-//         "Please write review",
-//         snackPosition: SnackPosition.BOTTOM,
-//       );
-//       return;
-//     }
-
-//     isSubmittingReview.value = true;
-
-//     debugPrint("⭐ REVIEW RATING → $rating");
-//     debugPrint("📝 REVIEW TEXT → $review");
-//     debugPrint("➡️ REVIEW JOB ID → ${widget.jobId}");
-//     debugPrint("➡️ REVIEW PROPOSAL ID → ${widget.proposalId}");
-
-//     Future.delayed(const Duration(milliseconds: 400), () {
-//       isSubmittingReview.value = false;
-//       isReviewSubmitted.value = true;
-//       showReviewForm.value = true;
-
-//       Get.snackbar(
-//         "Success",
-//         "Review form ready. API integration baad me kar dena.",
-//         snackPosition: SnackPosition.BOTTOM,
-//       );
-//     });
+//     await clientSideReviewController.loadReviews(jobId: widget.jobId);
+//     setState(() {});
 //   }
+// }
 
 //   Widget _buildReviewSection() {
 //     return Obx(
@@ -307,7 +293,25 @@
 //                 fontWeight: FontWeight.w700,
 //               ),
 //             ),
-//             const SizedBox(height: 18),
+//             const SizedBox(height: 12),
+
+//             if (clientSideReviewController.stats.value != null)
+//               Container(
+//                 width: double.infinity,
+//                 padding: const EdgeInsets.all(12),
+//                 margin: const EdgeInsets.only(bottom: 16),
+//                 decoration: BoxDecoration(
+//                   color: const Color(0xFFF9FAFB),
+//                   borderRadius: BorderRadius.circular(12),
+//                   border: Border.all(color: const Color(0xFFE5E7EB)),
+//                 ),
+//                 child: Text(
+//                   "Total Reviews: ${clientSideReviewController.stats.value!.totalReviews}   |   Avg Rating: ${clientSideReviewController.stats.value!.avgRating}",
+//                   style: const TextStyle(
+//                     fontWeight: FontWeight.w600,
+//                   ),
+//                 ),
+//               ),
 
 //             Container(
 //               width: double.infinity,
@@ -333,13 +337,22 @@
 //                   Row(
 //                     children: List.generate(5, (index) {
 //                       final starIndex = index + 1;
-//                       final isSelected = selectedRating.value >= starIndex;
+//                       final hasSubmitted =
+//                           clientSideReviewController.hasSubmittedReview.value;
+//                       final submittedData =
+//                           clientSideReviewController.submittedReview.value;
+
+//                       final isSelected = (hasSubmitted
+//                                   ? (submittedData?.rating ?? 0)
+//                                   : clientSideReviewController
+//                                       .selectedRating.value) >=
+//                               starIndex;
 
 //                       return GestureDetector(
-//                         onTap: isReviewSubmitted.value
+//                         onTap: hasSubmitted
 //                             ? null
 //                             : () {
-//                                 selectedRating.value = starIndex;
+//                                 clientSideReviewController.setRating(starIndex);
 //                               },
 //                         child: Padding(
 //                           padding: const EdgeInsets.only(right: 4),
@@ -360,9 +373,10 @@
 //                   const SizedBox(height: 14),
 
 //                   TextField(
-//                     controller: reviewController,
+//                     controller: clientSideReviewController.reviewCtrl,
 //                     maxLines: 4,
-//                     readOnly: isReviewSubmitted.value,
+//                     readOnly:
+//                         clientSideReviewController.hasSubmittedReview.value,
 //                     decoration: InputDecoration(
 //                       hintText: "Write your review",
 //                       contentPadding: const EdgeInsets.all(14),
@@ -382,11 +396,12 @@
 
 //                   const SizedBox(height: 14),
 
-//                   if (!isReviewSubmitted.value)
+//                   if (!clientSideReviewController.hasSubmittedReview.value)
 //                     ElevatedButton(
-//                       onPressed: isSubmittingReview.value
-//                           ? null
-//                           : _submitReviewLocally,
+//                       onPressed:
+//                           clientSideReviewController.isSubmittingReview.value
+//                               ? null
+//                               : _submitReviewApi,
 //                       style: ElevatedButton.styleFrom(
 //                         backgroundColor: const Color(0xFF4F46E5),
 //                         padding: const EdgeInsets.symmetric(
@@ -397,25 +412,26 @@
 //                           borderRadius: BorderRadius.circular(10),
 //                         ),
 //                       ),
-//                       child: isSubmittingReview.value
-//                           ? const SizedBox(
-//                               height: 18,
-//                               width: 18,
-//                               child: CircularProgressIndicator(
-//                                 strokeWidth: 2,
-//                                 color: Colors.white,
-//                               ),
-//                             )
-//                           : const Text(
-//                               "Submit Review",
-//                               style: TextStyle(
-//                                 fontWeight: FontWeight.w600,
-//                                 color: Colors.white,
-//                               ),
-//                             ),
+//                       child:
+//                           clientSideReviewController.isSubmittingReview.value
+//                               ? const SizedBox(
+//                                   height: 18,
+//                                   width: 18,
+//                                   child: CircularProgressIndicator(
+//                                     strokeWidth: 2,
+//                                     color: Colors.white,
+//                                   ),
+//                                 )
+//                               : const Text(
+//                                   "Submit Review",
+//                                   style: TextStyle(
+//                                     fontWeight: FontWeight.w600,
+//                                     color: Colors.white,
+//                                   ),
+//                                 ),
 //                     ),
 
-//                   if (isReviewSubmitted.value) ...[
+//                   if (clientSideReviewController.hasSubmittedReview.value) ...[
 //                     const SizedBox(height: 10),
 //                     const Text(
 //                       "Review submitted successfully",
@@ -430,9 +446,16 @@
 //               ),
 //             ),
 
-//             const SizedBox(height: 28),
+//             const SizedBox(height: 20),
 
-//             if (!isReviewSubmitted.value)
+//             if (clientSideReviewController.isLoadingReviews.value)
+//               const Center(
+//                 child: Padding(
+//                   padding: EdgeInsets.all(12),
+//                   child: CircularProgressIndicator(),
+//                 ),
+//               )
+//             else if (clientSideReviewController.reviews.isEmpty)
 //               const Center(
 //                 child: Text(
 //                   "No reviews yet. Be the first one.",
@@ -441,6 +464,50 @@
 //                     color: Colors.black38,
 //                   ),
 //                 ),
+//               )
+//             else
+//               Column(
+//                 children: clientSideReviewController.reviews.map((item) {
+//                   return Container(
+//                     width: double.infinity,
+//                     margin: const EdgeInsets.only(top: 10),
+//                     padding: const EdgeInsets.all(14),
+//                     decoration: BoxDecoration(
+//                       color: const Color(0xFFF9FAFB),
+//                       borderRadius: BorderRadius.circular(14),
+//                       border: Border.all(color: const Color(0xFFE5E7EB)),
+//                     ),
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.start,
+//                       children: [
+//                         Text(
+//                           item.reviewerName.isEmpty
+//                               ? "Client Review"
+//                               : item.reviewerName,
+//                           style: const TextStyle(
+//                             fontWeight: FontWeight.w700,
+//                           ),
+//                         ),
+//                         const SizedBox(height: 6),
+//                         Row(
+//                           children: List.generate(5, (index) {
+//                             return Icon(
+//                               index < item.rating
+//                                   ? Icons.star_rounded
+//                                   : Icons.star_border_rounded,
+//                               size: 18,
+//                               color: index < item.rating
+//                                   ? const Color(0xFFFFC107)
+//                                   : const Color(0xFFD1D5DB),
+//                             );
+//                           }),
+//                         ),
+//                         const SizedBox(height: 8),
+//                         Text(item.review),
+//                       ],
+//                     ),
+//                   );
+//                 }).toList(),
 //               ),
 //           ],
 //         ),
@@ -475,7 +542,6 @@
 //             debugPrint("➡️ isWorkSubmitted → $_isWorkSubmitted");
 //             debugPrint("➡️ canApprove → $_canApprove");
 //             debugPrint("➡️ showReviewForm → ${showReviewForm.value}");
-//             debugPrint("➡️ isReviewSubmitted → ${isReviewSubmitted.value}");
 
 //             return Column(
 //               children: [
@@ -739,8 +805,6 @@
 
 //   @override
 //   void dispose() {
-//     reviewController.dispose();
-
 //     if (Get.isRegistered<ClientViewDetailsProposalController>(
 //       tag: widget.proposalId,
 //     )) {
@@ -749,10 +813,17 @@
 //       );
 //     }
 
+//     if (Get.isRegistered<ClientSideReviewController>(tag: widget.jobId)) {
+//       Get.delete<ClientSideReviewController>(tag: widget.jobId);
+//     }
+
 //     super.dispose();
 //   }
 // }
+
 import 'package:flutter/material.dart';
+import 'package:freelancer_app/chatboot/ClientChatBottomSheet.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:freelancer_app/clientsideReview/ClientSideReviewController.dart';
 import 'package:freelancer_app/loginsignup/ClientProposal/ClientViewDetailPropsaleController.dart';
 import 'package:get/get.dart';
@@ -799,9 +870,20 @@ class _ClientViewDetailsProposalPageState
   final RxBool isApprovingLocal = false.obs;
   final RxBool showReviewForm = false.obs;
 
+  final RxString currentUserId = "".obs;
+
   @override
   void initState() {
     super.initState();
+
+    debugPrint("==================================================");
+    debugPrint("📄 CLIENT PROPOSAL DETAILS PAGE OPEN");
+    debugPrint("➡️ PROPOSAL ID => ${widget.proposalId}");
+    debugPrint("➡️ JOB ID => ${widget.jobId}");
+    debugPrint("➡️ FREELANCER NAME => ${widget.freelancerName}");
+    debugPrint("➡️ STATUS => ${widget.status}");
+    debugPrint("➡️ WORK STATUS => ${widget.workStatus}");
+    debugPrint("==================================================");
 
     controller = Get.isRegistered<ClientViewDetailsProposalController>(
       tag: widget.proposalId,
@@ -823,20 +905,49 @@ class _ClientViewDetailsProposalPageState
     currentProposalStatus = _normalizeProposalStatus(widget.status).obs;
     currentWorkStatus = _normalizeWorkStatus(widget.workStatus).obs;
 
+    debugPrint("✅ NORMALIZED STATUS READY");
+    debugPrint("➡️ currentProposalStatus => ${currentProposalStatus.value}");
+    debugPrint("➡️ currentWorkStatus => ${currentWorkStatus.value}");
+
     showReviewForm.value = currentProposalStatus.value == "completed" ||
         currentWorkStatus.value == "completed";
 
+    debugPrint("➡️ showReviewForm initial => ${showReviewForm.value}");
+
     if (showReviewForm.value) {
+      debugPrint("📥 LOADING REVIEWS ON INIT...");
       clientSideReviewController.loadReviews(jobId: widget.jobId);
     }
 
-    debugPrint("📄 OPEN PROPOSAL DETAIL PAGE");
-    debugPrint("➡️ INITIAL PROPOSAL STATUS → ${widget.status}");
-    debugPrint("➡️ INITIAL WORK STATUS → ${widget.workStatus}");
-    debugPrint("➡️ NORMALIZED PROPOSAL STATUS → ${currentProposalStatus.value}");
-    debugPrint("➡️ NORMALIZED WORK STATUS → ${currentWorkStatus.value}");
-    debugPrint("➡️ PROPOSAL ID → ${widget.proposalId}");
-    debugPrint("➡️ JOB ID → ${widget.jobId}");
+    _loadCurrentUserId();
+  }
+
+  Future<void> _loadCurrentUserId() async {
+    try {
+      debugPrint("==================================================");
+      debugPrint("👤 LOAD CURRENT USER ID START");
+      debugPrint("==================================================");
+
+      final prefs = await SharedPreferences.getInstance();
+
+      final clientId = prefs.getString("client_id");
+      final userId = prefs.getString("user_id");
+      final id = prefs.getString("id");
+
+      debugPrint("➡️ PREF client_id => $clientId");
+      debugPrint("➡️ PREF user_id => $userId");
+      debugPrint("➡️ PREF id => $id");
+
+      currentUserId.value = (clientId ?? userId ?? id ?? "").toString();
+
+      debugPrint("✅ FINAL CURRENT USER ID => ${currentUserId.value}");
+
+      if (currentUserId.value.isEmpty) {
+        debugPrint("⚠️ USER ID IS EMPTY");
+      }
+    } catch (e) {
+      debugPrint("❌ LOAD CURRENT USER ID ERROR => $e");
+    }
   }
 
   String _normalizeProposalStatus(String value) {
@@ -849,6 +960,7 @@ class _ClientViewDetailsProposalPageState
     if (v == "subbmited") return "submitted";
     if (v.contains("submit")) return "submitted";
     if (v.contains("deliver")) return "submitted";
+    if (v.replaceAll(" ", "").contains("inprogress")) return "inprogress";
     if (v.contains("complete")) return "completed";
     if (v.contains("approve")) return "approved";
 
@@ -862,6 +974,7 @@ class _ClientViewDetailsProposalPageState
     if (v == "subbmited") return "submitted";
     if (v.contains("submit")) return "submitted";
     if (v.contains("deliver")) return "submitted";
+    if (v.replaceAll(" ", "").contains("inprogress")) return "inprogress";
     if (v.contains("complete")) return "completed";
     if (v.contains("approve")) return "approved";
 
@@ -881,28 +994,62 @@ class _ClientViewDetailsProposalPageState
 
   bool get _isWorkSubmitted => currentWorkStatus.value == "submitted";
 
+  bool get _isInProgress =>
+      currentProposalStatus.value == "inprogress" ||
+      currentWorkStatus.value == "inprogress";
+
   bool get _canApprove =>
       (_isAccepted && _isWorkSubmitted) ||
       (_isSubmittedFromStatus && !_isCompleted);
 
+  bool get _canOpenChat {
+    final canChat = !_isPending &&
+        !_isCompleted &&
+        (_isAccepted ||
+            _isSubmittedFromStatus ||
+            _isWorkSubmitted ||
+            _isInProgress);
+
+    debugPrint("==================================================");
+    debugPrint("💬 CHAT VISIBILITY CHECK");
+    debugPrint("➡️ proposalStatus => ${currentProposalStatus.value}");
+    debugPrint("➡️ workStatus => ${currentWorkStatus.value}");
+    debugPrint("➡️ _isPending => $_isPending");
+    debugPrint("➡️ _isCompleted => $_isCompleted");
+    debugPrint("➡️ _isAccepted => $_isAccepted");
+    debugPrint("➡️ _isSubmittedFromStatus => $_isSubmittedFromStatus");
+    debugPrint("➡️ _isWorkSubmitted => $_isWorkSubmitted");
+    debugPrint("➡️ _isInProgress => $_isInProgress");
+    debugPrint("➡️ _canOpenChat => $canChat");
+    debugPrint("==================================================");
+
+    return canChat;
+  }
+
   Future<void> _handleAccept() async {
     if (isAccepting.value || isRejecting.value || isApprovingLocal.value) {
+      debugPrint("⚠️ ACCEPT BLOCKED => another action already running");
       return;
     }
 
     try {
       isAccepting.value = true;
 
-      debugPrint("🟢 ACCEPT BUTTON CLICKED");
-      debugPrint("➡️ BEFORE ACCEPT STATUS → ${currentProposalStatus.value}");
+      debugPrint("==================================================");
+      debugPrint("🟢 ACCEPT CLICKED");
+      debugPrint("➡️ PROPOSAL ID => ${widget.proposalId}");
+      debugPrint("➡️ BEFORE STATUS => ${currentProposalStatus.value}");
+      debugPrint("==================================================");
 
       final success = await controller.acceptProposal(widget.proposalId);
+
+      debugPrint("➡️ ACCEPT API RESPONSE => $success");
 
       if (success) {
         currentProposalStatus.value = "accepted";
 
         debugPrint("✅ ACCEPT SUCCESS");
-        debugPrint("➡️ AFTER ACCEPT STATUS → ${currentProposalStatus.value}");
+        debugPrint("➡️ AFTER STATUS => ${currentProposalStatus.value}");
 
         Get.snackbar(
           "Success",
@@ -911,7 +1058,7 @@ class _ClientViewDetailsProposalPageState
         );
       }
     } catch (e) {
-      debugPrint("❌ ACCEPT ERROR → $e");
+      debugPrint("❌ ACCEPT ERROR => $e");
       Get.snackbar(
         "Error",
         e.toString(),
@@ -919,27 +1066,34 @@ class _ClientViewDetailsProposalPageState
       );
     } finally {
       isAccepting.value = false;
+      debugPrint("🛑 ACCEPT END");
     }
   }
 
   Future<void> _handleReject() async {
     if (isAccepting.value || isRejecting.value || isApprovingLocal.value) {
+      debugPrint("⚠️ REJECT BLOCKED => another action already running");
       return;
     }
 
     try {
       isRejecting.value = true;
 
-      debugPrint("🔴 REJECT BUTTON CLICKED");
-      debugPrint("➡️ BEFORE REJECT STATUS → ${currentProposalStatus.value}");
+      debugPrint("==================================================");
+      debugPrint("🔴 REJECT CLICKED");
+      debugPrint("➡️ PROPOSAL ID => ${widget.proposalId}");
+      debugPrint("➡️ BEFORE STATUS => ${currentProposalStatus.value}");
+      debugPrint("==================================================");
 
       final success = await controller.rejectProposal(widget.proposalId);
+
+      debugPrint("➡️ REJECT API RESPONSE => $success");
 
       if (success) {
         currentProposalStatus.value = "rejected";
 
         debugPrint("✅ REJECT SUCCESS");
-        debugPrint("➡️ AFTER REJECT STATUS → ${currentProposalStatus.value}");
+        debugPrint("➡️ AFTER STATUS => ${currentProposalStatus.value}");
 
         Get.snackbar(
           "Success",
@@ -948,7 +1102,7 @@ class _ClientViewDetailsProposalPageState
         );
       }
     } catch (e) {
-      debugPrint("❌ REJECT ERROR → $e");
+      debugPrint("❌ REJECT ERROR => $e");
       Get.snackbar(
         "Error",
         e.toString(),
@@ -956,27 +1110,43 @@ class _ClientViewDetailsProposalPageState
       );
     } finally {
       isRejecting.value = false;
+      debugPrint("🛑 REJECT END");
     }
   }
 
   Future<void> _handleApprove() async {
-    if (!_canApprove || isApprovingLocal.value) return;
+    if (!_canApprove || isApprovingLocal.value) {
+      debugPrint("⚠️ APPROVE BLOCKED");
+      debugPrint("➡️ _canApprove => $_canApprove");
+      debugPrint("➡️ isApprovingLocal => ${isApprovingLocal.value}");
+      return;
+    }
 
     try {
       isApprovingLocal.value = true;
 
-      debugPrint("🟣 APPROVE BUTTON PRESSED");
-      debugPrint("➡️ PROPOSAL STATUS → ${currentProposalStatus.value}");
-      debugPrint("➡️ WORK STATUS → ${currentWorkStatus.value}");
-      debugPrint("➡️ APPROVE WITH JOB ID → ${widget.jobId}");
-      debugPrint("➡️ PROPOSAL ID FOR REFERENCE → ${widget.proposalId}");
+      debugPrint("==================================================");
+      debugPrint("🟣 APPROVE CLICKED");
+      debugPrint("➡️ JOB ID => ${widget.jobId}");
+      debugPrint("➡️ PROPOSAL ID => ${widget.proposalId}");
+      debugPrint("➡️ BEFORE PROPOSAL STATUS => ${currentProposalStatus.value}");
+      debugPrint("➡️ BEFORE WORK STATUS => ${currentWorkStatus.value}");
+      debugPrint("==================================================");
 
       final success = await controller.approveWork(widget.jobId);
+
+      debugPrint("➡️ APPROVE API RESPONSE => $success");
 
       if (success) {
         currentProposalStatus.value = "completed";
         currentWorkStatus.value = "completed";
         showReviewForm.value = true;
+
+        debugPrint("✅ APPROVE SUCCESS");
+        debugPrint("➡️ AFTER PROPOSAL STATUS => ${currentProposalStatus.value}");
+        debugPrint("➡️ AFTER WORK STATUS => ${currentWorkStatus.value}");
+        debugPrint("➡️ showReviewForm => ${showReviewForm.value}");
+        debugPrint("➡️ APPROVE BUTTON SHOULD NOW HIDE/DISABLE");
 
         clientSideReviewController.clearForm();
         await clientSideReviewController.loadReviews(jobId: widget.jobId);
@@ -988,7 +1158,7 @@ class _ClientViewDetailsProposalPageState
         );
       }
     } catch (e) {
-      debugPrint("❌ APPROVE ERROR → $e");
+      debugPrint("❌ APPROVE ERROR => $e");
       Get.snackbar(
         "Error",
         e.toString(),
@@ -996,28 +1166,89 @@ class _ClientViewDetailsProposalPageState
       );
     } finally {
       isApprovingLocal.value = false;
+      debugPrint("🛑 APPROVE END");
     }
   }
 
-Future<void> _submitReviewApi() async {
-  final success = await clientSideReviewController.submitReview(
-    jobId: widget.jobId,
-  );
+  Future<void> _submitReviewApi() async {
+    try {
+      debugPrint("==================================================");
+      debugPrint("⭐ SUBMIT REVIEW START");
+      debugPrint("➡️ JOB ID => ${widget.jobId}");
+      debugPrint("➡️ currentUserId => ${currentUserId.value}");
+      debugPrint(
+          "➡️ selectedRating => ${clientSideReviewController.selectedRating.value}");
+      debugPrint(
+          "➡️ reviewText => ${clientSideReviewController.reviewCtrl.text}");
+      debugPrint("==================================================");
 
-  if (success) {
-    final submitted = clientSideReviewController.submittedReview.value;
-
-    if (submitted != null) {
-      clientSideReviewController.setSubmittedReviewUi(
-        rating: submitted.rating,
-        reviewText: submitted.review,
+      final success = await clientSideReviewController.submitReview(
+        jobId: widget.jobId,
       );
+
+      debugPrint("➡️ SUBMIT REVIEW RESPONSE => $success");
+
+      if (success) {
+        final submitted = clientSideReviewController.submittedReview.value;
+
+        if (submitted != null) {
+          debugPrint("✅ REVIEW SUBMITTED");
+          debugPrint("➡️ submitted.rating => ${submitted.rating}");
+          debugPrint("➡️ submitted.review => ${submitted.review}");
+
+          clientSideReviewController.setSubmittedReviewUi(
+            rating: submitted.rating,
+            reviewText: submitted.review,
+          );
+        }
+
+        await clientSideReviewController.loadReviews(jobId: widget.jobId);
+        setState(() {});
+      }
+    } catch (e) {
+      debugPrint("❌ SUBMIT REVIEW ERROR => $e");
+    }
+  }
+
+  void _openChatSheet() {
+    debugPrint("==================================================");
+    debugPrint("💬 OPEN CHAT CLICKED");
+    debugPrint("➡️ proposalId => ${widget.proposalId}");
+    debugPrint("➡️ freelancerName => ${widget.freelancerName}");
+    debugPrint("➡️ currentUserId => ${currentUserId.value}");
+    debugPrint("➡️ proposalStatus => ${currentProposalStatus.value}");
+    debugPrint("➡️ workStatus => ${currentWorkStatus.value}");
+    debugPrint("➡️ _canOpenChat => $_canOpenChat");
+    debugPrint("==================================================");
+
+    if (!_canOpenChat) {
+      debugPrint("⚠️ CHAT OPEN BLOCKED => _canOpenChat is false");
+      return;
     }
 
-    await clientSideReviewController.loadReviews(jobId: widget.jobId);
-    setState(() {});
+    if (currentUserId.value.isEmpty) {
+      debugPrint("❌ CHAT OPEN BLOCKED => USER ID EMPTY");
+      Get.snackbar(
+        "Error",
+        "User ID not found. Please login again.",
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    debugPrint("✅ OPENING CHAT BOTTOM SHEET");
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ClientChatBottomSheet(
+        proposalId: widget.proposalId,
+        freelancerName: widget.freelancerName,
+        currentUserId: currentUserId.value,
+      ),
+    );
   }
-}
 
   Widget _buildReviewSection() {
     return Obx(
@@ -1047,7 +1278,6 @@ Future<void> _submitReviewApi() async {
               ),
             ),
             const SizedBox(height: 12),
-
             if (clientSideReviewController.stats.value != null)
               Container(
                 width: double.infinity,
@@ -1060,12 +1290,9 @@ Future<void> _submitReviewApi() async {
                 ),
                 child: Text(
                   "Total Reviews: ${clientSideReviewController.stats.value!.totalReviews}   |   Avg Rating: ${clientSideReviewController.stats.value!.avgRating}",
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
-
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -1086,7 +1313,6 @@ Future<void> _submitReviewApi() async {
                     ),
                   ),
                   const SizedBox(height: 14),
-
                   Row(
                     children: List.generate(5, (index) {
                       final starIndex = index + 1;
@@ -1098,13 +1324,14 @@ Future<void> _submitReviewApi() async {
                       final isSelected = (hasSubmitted
                                   ? (submittedData?.rating ?? 0)
                                   : clientSideReviewController
-                                      .selectedRating.value) >=
+                                          .selectedRating.value) >=
                               starIndex;
 
                       return GestureDetector(
                         onTap: hasSubmitted
                             ? null
                             : () {
+                                debugPrint("⭐ STAR CLICKED => $starIndex");
                                 clientSideReviewController.setRating(starIndex);
                               },
                         child: Padding(
@@ -1122,9 +1349,7 @@ Future<void> _submitReviewApi() async {
                       );
                     }),
                   ),
-
                   const SizedBox(height: 14),
-
                   TextField(
                     controller: clientSideReviewController.reviewCtrl,
                     maxLines: 4,
@@ -1135,7 +1360,8 @@ Future<void> _submitReviewApi() async {
                       contentPadding: const EdgeInsets.all(14),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF6366F1)),
+                        borderSide:
+                            const BorderSide(color: Color(0xFF6366F1)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -1146,44 +1372,44 @@ Future<void> _submitReviewApi() async {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 14),
-
                   if (!clientSideReviewController.hasSubmittedReview.value)
-                    ElevatedButton(
-                      onPressed:
-                          clientSideReviewController.isSubmittingReview.value
-                              ? null
-                              : _submitReviewApi,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4F46E5),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 12,
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed:
+                            clientSideReviewController.isSubmittingReview.value
+                                ? null
+                                : _submitReviewApi,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4F46E5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+                        child:
+                            clientSideReviewController.isSubmittingReview.value
+                                ? const SizedBox(
+                                    height: 18,
+                                    width: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text(
+                                    "Submit Review",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                       ),
-                      child:
-                          clientSideReviewController.isSubmittingReview.value
-                              ? const SizedBox(
-                                  height: 18,
-                                  width: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Text(
-                                  "Submit Review",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
                     ),
-
                   if (clientSideReviewController.hasSubmittedReview.value) ...[
                     const SizedBox(height: 10),
                     const Text(
@@ -1198,70 +1424,6 @@ Future<void> _submitReviewApi() async {
                 ],
               ),
             ),
-
-            const SizedBox(height: 20),
-
-            if (clientSideReviewController.isLoadingReviews.value)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(12),
-                  child: CircularProgressIndicator(),
-                ),
-              )
-            else if (clientSideReviewController.reviews.isEmpty)
-              const Center(
-                child: Text(
-                  "No reviews yet. Be the first one.",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black38,
-                  ),
-                ),
-              )
-            else
-              Column(
-                children: clientSideReviewController.reviews.map((item) {
-                  return Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(top: 10),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF9FAFB),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFFE5E7EB)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.reviewerName.isEmpty
-                              ? "Client Review"
-                              : item.reviewerName,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: List.generate(5, (index) {
-                            return Icon(
-                              index < item.rating
-                                  ? Icons.star_rounded
-                                  : Icons.star_border_rounded,
-                              size: 18,
-                              color: index < item.rating
-                                  ? const Color(0xFFFFC107)
-                                  : const Color(0xFFD1D5DB),
-                            );
-                          }),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(item.review),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
           ],
         ),
       ),
@@ -1287,14 +1449,21 @@ Future<void> _submitReviewApi() async {
             final proposalStatus = currentProposalStatus.value;
             final workStatus = currentWorkStatus.value;
 
+            debugPrint("--------------------------------------------------");
             debugPrint("🔄 UI REBUILD");
-            debugPrint("➡️ proposalStatus → $proposalStatus");
-            debugPrint("➡️ workStatus → $workStatus");
-            debugPrint("➡️ isAccepted → $_isAccepted");
-            debugPrint("➡️ isSubmittedFromStatus → $_isSubmittedFromStatus");
-            debugPrint("➡️ isWorkSubmitted → $_isWorkSubmitted");
-            debugPrint("➡️ canApprove → $_canApprove");
-            debugPrint("➡️ showReviewForm → ${showReviewForm.value}");
+            debugPrint("➡️ proposalStatus => $proposalStatus");
+            debugPrint("➡️ workStatus => $workStatus");
+            debugPrint("➡️ currentUserId => ${currentUserId.value}");
+            debugPrint("➡️ _isPending => $_isPending");
+            debugPrint("➡️ _isCompleted => $_isCompleted");
+            debugPrint("➡️ _isAccepted => $_isAccepted");
+            debugPrint("➡️ _isSubmittedFromStatus => $_isSubmittedFromStatus");
+            debugPrint("➡️ _isWorkSubmitted => $_isWorkSubmitted");
+            debugPrint("➡️ _isInProgress => $_isInProgress");
+            debugPrint("➡️ _canOpenChat => $_canOpenChat");
+            debugPrint("➡️ _canApprove => $_canApprove");
+            debugPrint("➡️ showReviewForm => ${showReviewForm.value}");
+            debugPrint("--------------------------------------------------");
 
             return Column(
               children: [
@@ -1338,7 +1507,8 @@ Future<void> _submitReviewApi() async {
                                     const SizedBox(height: 4),
                                     Text(
                                       widget.freelancerEmail,
-                                      style: const TextStyle(color: Colors.grey),
+                                      style:
+                                          const TextStyle(color: Colors.grey),
                                     ),
                                   ],
                                 ),
@@ -1362,9 +1532,7 @@ Future<void> _submitReviewApi() async {
                             ],
                           ),
                         ),
-
                         const SizedBox(height: 20),
-
                         Row(
                           children: [
                             Expanded(
@@ -1379,9 +1547,7 @@ Future<void> _submitReviewApi() async {
                             ),
                           ],
                         ),
-
                         const SizedBox(height: 20),
-
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(16),
@@ -1404,7 +1570,6 @@ Future<void> _submitReviewApi() async {
                             ],
                           ),
                         ),
-
                         if (workStatus.isNotEmpty) ...[
                           const SizedBox(height: 16),
                           Container(
@@ -1436,9 +1601,7 @@ Future<void> _submitReviewApi() async {
                             ),
                           ),
                         ],
-
                         if (showReviewForm.value) _buildReviewSection(),
-
                         const SizedBox(height: 24),
                       ],
                     ),
@@ -1484,25 +1647,53 @@ Future<void> _submitReviewApi() async {
                         ),
                       ],
                     )
-                  else if ((_isAccepted || _isSubmittedFromStatus) &&
+                  else if ((_isAccepted ||
+                          _isSubmittedFromStatus ||
+                          _isInProgress) &&
                       !showReviewForm.value)
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              _canApprove ? Colors.blue : Colors.grey,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  _canApprove ? Colors.blue : Colors.grey,
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            onPressed: (!_canApprove || isApprovingLocal.value)
+                                ? null
+                                : _handleApprove,
+                            child: isApprovingLocal.value
+                                ? const Text("Please wait approving...")
+                                : _canApprove
+                                    ? const Text("Approve Work")
+                                    : const Text("Waiting for Submit"),
+                          ),
                         ),
-                        onPressed: (!_canApprove || isApprovingLocal.value)
-                            ? null
-                            : _handleApprove,
-                        child: isApprovingLocal.value
-                            ? const Text("Please wait approving...")
-                            : _canApprove
-                                ? const Text("Approve Work")
-                                : const Text("Waiting for Submit"),
-                      ),
+                        if (_canOpenChat) ...[
+                          const SizedBox(width: 10),
+                          ElevatedButton(
+                            onPressed: _openChatSheet,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              elevation: 0,
+                              side: const BorderSide(color: Color(0xFFE5E7EB)),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.chat_bubble_outline_rounded,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
               ],
             );
@@ -1551,6 +1742,8 @@ Future<void> _submitReviewApi() async {
         return Colors.blueGrey.shade100;
       case "submitted":
         return Colors.blue.shade100;
+      case "inprogress":
+        return Colors.purple.shade100;
       default:
         return Colors.grey.shade200;
     }
@@ -1558,6 +1751,12 @@ Future<void> _submitReviewApi() async {
 
   @override
   void dispose() {
+    debugPrint("==================================================");
+    debugPrint("🧹 CLIENT PROPOSAL DETAILS PAGE DISPOSE");
+    debugPrint("➡️ PROPOSAL ID => ${widget.proposalId}");
+    debugPrint("➡️ JOB ID => ${widget.jobId}");
+    debugPrint("==================================================");
+
     if (Get.isRegistered<ClientViewDetailsProposalController>(
       tag: widget.proposalId,
     )) {

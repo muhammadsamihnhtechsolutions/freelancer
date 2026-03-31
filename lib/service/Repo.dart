@@ -4,6 +4,7 @@ import 'package:freelancer_app/ClientProfilePage/ClientProfileModel.dart';
 import 'package:freelancer_app/FreelancerDashboard/Freelancerprofile/FreelancerProfileModel.dart';
 
 import 'package:freelancer_app/FreelancerReviewsubmitModel/FreelancerSubmitReviewModel.dart';
+import 'package:freelancer_app/chatboot/MessageModel.dart';
 import 'package:freelancer_app/loginsignup/ClientProposal/ClientProposalModel.dart';
 import 'package:freelancer_app/loginsignup/SignUpModel.dart';
 import 'package:freelancer_app/service/ApiConstant.dart' show ApiConstants;
@@ -662,11 +663,74 @@ static Future<dynamic> updateProposalStatus(
 }
 }
 
-class DashboardRepo {
+// class DashboardRepo {
 
+//   /// GET CLIENT JOBS
+//   static Future<dynamic> getClientJobs(String clientId) async {
+
+//     final url = "${ApiConstants.clientJobs}/$clientId";
+
+//     print("--------------------------------------------------");
+//     print("🔵 FETCH CLIENT JOBS");
+//     print("➡️ CLIENT ID → $clientId");
+//     print("➡️ URL → $url");
+//     print("--------------------------------------------------");
+
+//     try {
+
+//       final res = await ApiService.get(
+//         url,
+//         auth: true,
+//         role: "client",
+//       );
+
+//       print("⬇️ CLIENT JOBS RESPONSE → $res");
+
+//       return res;
+
+//     } catch (e) {
+
+//       print("❌ CLIENT JOBS ERROR → $e");
+
+//       return null;
+//     }
+//   }
+
+
+//   /// GET PROPOSALS BY JOB
+//   static Future<dynamic> getProposalsByJob(String jobId) async {
+
+//     final url = "${ApiConstants.proposalsByJob}/$jobId";
+
+//     print("--------------------------------------------------");
+//     print("🟣 FETCH JOB PROPOSALS");
+//     print("➡️ JOB ID → $jobId");
+//     print("➡️ URL → $url");
+//     print("--------------------------------------------------");
+
+//     try {
+
+//       final res = await ApiService.get(
+//         url,
+//         auth: true,
+//         role: "client",
+//       );
+
+//       print("⬇️ JOB PROPOSALS RESPONSE → $res");
+
+//       return res;
+
+//     } catch (e) {
+
+//       print("❌ JOB PROPOSALS ERROR → $e");
+
+//       return null;
+//     }
+//   }
+// }
+class DashboardRepo {
   /// GET CLIENT JOBS
   static Future<dynamic> getClientJobs(String clientId) async {
-
     final url = "${ApiConstants.clientJobs}/$clientId";
 
     print("--------------------------------------------------");
@@ -676,7 +740,6 @@ class DashboardRepo {
     print("--------------------------------------------------");
 
     try {
-
       final res = await ApiService.get(
         url,
         auth: true,
@@ -685,20 +748,59 @@ class DashboardRepo {
 
       print("⬇️ CLIENT JOBS RESPONSE → $res");
 
-      return res;
+      /// ✅ If proper response mil gaya to wahi return karo
+      if (res != null && res["success"] == true) {
+        return res;
+      }
 
+      print("⚠️ CLIENT JOBS ROUTE FAILED, TRYING FALLBACK /jobs");
     } catch (e) {
-
       print("❌ CLIENT JOBS ERROR → $e");
+      print("⚠️ TRYING FALLBACK /jobs");
+    }
 
+    /// ✅ FALLBACK
+    try {
+    final fallbackUrl = "${ApiConstants.baseUrl}/jobs";// ya "${ApiConstants.baseUrl}/jobs"
+
+      print("--------------------------------------------------");
+      print("🟡 FALLBACK FETCH ALL JOBS");
+      print("➡️ URL → $fallbackUrl");
+      print("--------------------------------------------------");
+
+      final fallbackRes = await ApiService.get(
+        fallbackUrl,
+        auth: true,
+        role: "client",
+      );
+
+      print("⬇️ FALLBACK JOBS RESPONSE → $fallbackRes");
+
+      if (fallbackRes == null || fallbackRes["data"] == null) {
+        return null;
+      }
+
+      final List allJobs = fallbackRes["data"];
+      final clientJobs = allJobs.where((job) {
+        return (job["client_id"] ?? "").toString() == clientId;
+      }).toList();
+
+      final mappedRes = {
+        "success": true,
+        "data": clientJobs,
+      };
+
+      print("✅ FILTERED CLIENT JOBS COUNT → ${clientJobs.length}");
+
+      return mappedRes;
+    } catch (e) {
+      print("❌ FALLBACK CLIENT JOBS ERROR → $e");
       return null;
     }
   }
 
-
   /// GET PROPOSALS BY JOB
   static Future<dynamic> getProposalsByJob(String jobId) async {
-
     final url = "${ApiConstants.proposalsByJob}/$jobId";
 
     print("--------------------------------------------------");
@@ -708,7 +810,6 @@ class DashboardRepo {
     print("--------------------------------------------------");
 
     try {
-
       final res = await ApiService.get(
         url,
         auth: true,
@@ -718,16 +819,12 @@ class DashboardRepo {
       print("⬇️ JOB PROPOSALS RESPONSE → $res");
 
       return res;
-
     } catch (e) {
-
       print("❌ JOB PROPOSALS ERROR → $e");
-
       return null;
     }
   }
 }
-
 
 class ClientProfileRepo {
 
@@ -985,63 +1082,7 @@ class SubmitProposalRepo {
   }
 }
 
-// class SubmitProposalRepo {
-//   static Future<dynamic> submitProposal({
-//     required Map<String, dynamic> body,
-//     required File cvFile,
-//   }) async {
-//     final url = ApiConstants.submitProposal;
 
-//     print("=================================");
-//     print("🚀 SUBMIT PROPOSAL API");
-//     print("➡️ URL → $url");
-//     print("📤 BODY → $body");
-//     print("📄 CV FILE NAME → ${cvFile.path.split('/').last}");
-//     print("📁 CV FILE PATH → ${cvFile.path}");
-//     print("=================================");
-
-//     final res = await ApiService.multipartPost(
-//       url,
-//       body,
-//       files: {
-//         "cv": cvFile,
-//       },
-//       auth: true,
-//       role: "freelancer",
-//     );
-
-//     print("⬇️ SUBMIT PROPOSAL RESPONSE → $res");
-
-//     return res;
-//   }
-// }
-
-// class SubmitProposalRepo {
-
-//   static Future<dynamic> submitProposal(
-//     Map<String, dynamic> body,
-//   ) async {
-
-//     final url = ApiConstants.submitProposal;
-
-//     print("=================================");
-//     print("🚀 SUBMIT PROPOSAL API");
-//     print("➡️ URL → $url");
-//     print("📤 BODY → $body");
-//     print("=================================");
-
-//     final res = await ApiService.post(
-//       url,
-//       body,
-//       auth: true,
-//       role: "freelancer",
-//     );
-
-//     print("⬇️ SUBMIT PROPOSAL RESPONSE → $res");
-
-//     return res;
-//   }
-// }
 class FreelancerSideNotificationRepo {
 
   // ---------------- FETCH ALL ----------------
@@ -1113,47 +1154,6 @@ class FreelancerSideNotificationRepo {
   }
 }
 
-// class FreelancerSubmitReviewRepo {
-//   /// ==================================================
-//   /// FREELANCER: SUBMIT REVIEW
-//   /// POST /reviews
-//   /// ==================================================
-//   static Future<Map<String, dynamic>> submitReview({
-//     required String jobId,
-//     required int rating,
-//     required String review,
-//   }) async {
-//     final url = ApiConstants.freelancerSubmitReview;
-
-//     final payload = {
-//       "jobId": jobId,
-//       "rating": rating,
-//       "review": review,
-//     };
-
-//     print("--------------------------------------------------");
-//     print("🟣 SUBMITTING REVIEW (FREELANCER)");
-//     print("➡️ URL → $url");
-//     print("📤 Payload → $payload");
-//     print("--------------------------------------------------");
-
-//     final res = await ApiService.post(
-//       url,
-//       payload,
-//       auth: true,
-//       role: "freelancer",
-//     );
-
-//     print("✅ REVIEW RESPONSE → $res");
-
-//     return {
-//       "message": res["message"] ?? "Review submitted successfully",
-//       "review": res["review"] != null
-//           ? FreelancerSubmitReviewModel.fromJson(res["review"])
-//           : null,
-//     };
-//   }
-// }
 
 class FreelancerSubmitReviewRepo {
   static Future<dynamic> submitReview({
@@ -1273,6 +1273,369 @@ class ClientSideReviewRepo {
         "success": false,
         "message": e.toString(),
       };
+    }
+  }
+}
+// chatboot
+
+
+class ClientMessagesRepo {
+  static const String _role = "client";
+
+  static Future<List<MessageModel>> fetchMessages(String proposalId) async {
+    final url = "${ApiConstants.baseUrl}/messages/$proposalId";
+
+    final res = await ApiService.get(
+      url,
+      auth: true,
+      role: _role,
+    );
+
+    if (res == null || res["data"] == null) {
+      return [];
+    }
+
+    final List list = res["data"];
+    return list.map((e) => MessageModel.fromJson(e)).toList();
+  }
+
+  static Future<MessageModel?> sendMessage({
+    required String proposalId,
+    required String message,
+  }) async {
+    final url = "${ApiConstants.baseUrl}/messages";
+
+    final res = await ApiService.post(
+      url,
+      {
+        "proposal_id": proposalId,
+        "message": message,
+      },
+      auth: true,
+      role: _role,
+    );
+
+    if (res == null || res["data"] == null) {
+      return null;
+    }
+
+    return MessageModel.fromJson(res["data"]);
+  }
+
+  static Future<bool> markSeen(String messageId) async {
+    final url = "${ApiConstants.baseUrl}/messages/$messageId/seen";
+
+    final res = await ApiService.patch(
+      url,
+      {},
+      auth: true,
+      role: _role,
+    );
+
+    return res != null && res["success"] == true;
+  }
+
+  static Future<bool> deleteMessage(String messageId) async {
+    final url = "${ApiConstants.baseUrl}/messages/$messageId";
+
+    final res = await ApiService.delete(
+      url,
+      auth: true,
+      role: _role,
+    );
+
+    return res != null && res["success"] == true;
+  }
+
+  static Future<Map<String, int>> fetchUnreadCounts() async {
+    final url = "${ApiConstants.baseUrl}/messages/unread/counts";
+
+    final res = await ApiService.get(
+      url,
+      auth: true,
+      role: _role,
+    );
+
+    if (res == null || res["data"] == null) return {};
+
+    final List list = res["data"];
+    final Map<String, int> map = {};
+
+    for (final item in list) {
+      map[(item["proposal_id"] ?? "").toString()] =
+          int.tryParse((item["unread_count"] ?? 0).toString()) ?? 0;
+    }
+
+    return map;
+  }
+
+  static Future<Map<String, int>> fetchUnreadCountsByJob() async {
+    final url = "${ApiConstants.baseUrl}/messages/unread/counts-by-job";
+
+    final res = await ApiService.get(
+      url,
+      auth: true,
+      role: _role,
+    );
+
+    if (res == null || res["data"] == null) return {};
+
+    final List list = res["data"];
+    final Map<String, int> map = {};
+
+    for (final item in list) {
+      map[(item["job_id"] ?? "").toString()] =
+          int.tryParse((item["unread_count"] ?? 0).toString()) ?? 0;
+    }
+
+    return map;
+  }
+}
+class FreelancerMessagesRepo {
+  static const String _role = "freelancer";
+
+  static Future<List<MessageModel>> fetchMessages(String proposalId) async {
+    final url = "${ApiConstants.baseUrl}/messages/$proposalId";
+
+    final res = await ApiService.get(
+      url,
+      auth: true,
+      role: _role,
+    );
+
+    if (res == null || res["data"] == null) {
+      return [];
+    }
+
+    final List list = res["data"];
+    return list.map((e) => MessageModel.fromJson(e)).toList();
+  }
+
+  static Future<MessageModel?> sendMessage({
+    required String proposalId,
+    required String message,
+  }) async {
+    final url = "${ApiConstants.baseUrl}/messages";
+
+    final res = await ApiService.post(
+      url,
+      {
+        "proposal_id": proposalId,
+        "message": message,
+      },
+      auth: true,
+      role: _role,
+    );
+
+    if (res == null || res["data"] == null) {
+      return null;
+    }
+
+    return MessageModel.fromJson(res["data"]);
+  }
+
+  static Future<bool> markSeen(String messageId) async {
+    final url = "${ApiConstants.baseUrl}/messages/$messageId/seen";
+
+    final res = await ApiService.patch(
+      url,
+      {},
+      auth: true,
+      role: _role,
+    );
+
+    return res != null && res["success"] == true;
+  }
+
+  static Future<bool> deleteMessage(String messageId) async {
+    final url = "${ApiConstants.baseUrl}/messages/$messageId";
+
+    final res = await ApiService.delete(
+      url,
+      auth: true,
+      role: _role,
+    );
+
+    return res != null && res["success"] == true;
+  }
+
+  static Future<Map<String, int>> fetchUnreadCounts() async {
+    final url = "${ApiConstants.baseUrl}/messages/unread/counts";
+
+    final res = await ApiService.get(
+      url,
+      auth: true,
+      role: _role,
+    );
+
+    if (res == null || res["data"] == null) return {};
+
+    final List list = res["data"];
+    final Map<String, int> map = {};
+
+    for (final item in list) {
+      map[(item["proposal_id"] ?? "").toString()] =
+          int.tryParse((item["unread_count"] ?? 0).toString()) ?? 0;
+    }
+
+    return map;
+  }
+
+  static Future<Map<String, int>> fetchUnreadCountsByJob() async {
+    final url = "${ApiConstants.baseUrl}/messages/unread/counts-by-job";
+
+    final res = await ApiService.get(
+      url,
+      auth: true,
+      role: _role,
+    );
+
+    if (res == null || res["data"] == null) return {};
+
+    final List list = res["data"];
+    final Map<String, int> map = {};
+
+    for (final item in list) {
+      map[(item["job_id"] ?? "").toString()] =
+          int.tryParse((item["unread_count"] ?? 0).toString()) ?? 0;
+    }
+
+    return map;
+  }
+}
+
+
+// class ClientGetReviewRepo {
+//   /// GET REVIEWS BY JOB ID
+//   static Future<Map<String, dynamic>?> getReviews(String jobId) async {
+//     final cleanJobId = jobId.trim();
+//     final url = ApiConstants.clientGetReviews(cleanJobId);
+
+//     print("==================================================");
+//     print("🟣 CLIENT GET REVIEWS API START");
+//     print("➡️ JOB ID → $cleanJobId");
+//     print("➡️ URL → $url");
+//     print("==================================================");
+
+//     if (cleanJobId.isEmpty) {
+//       print("❌ CLIENT GET REVIEWS ERROR → JOB ID IS EMPTY");
+//       print("==================================================");
+//       return null;
+//     }
+
+//     try {
+//       print("📡 SENDING GET REQUEST...");
+//       print("➡️ AUTH → true");
+//       print("➡️ ROLE → client");
+
+//       final res = await ApiService.get(
+//         url,
+//         auth: true,
+//         role: "client",
+//       );
+
+//       print("--------------------------------------------------");
+//       print("⬇️ CLIENT GET REVIEWS RAW RESPONSE → $res");
+//       print("--------------------------------------------------");
+
+//       if (res == null) {
+//         print("❌ CLIENT GET REVIEWS ERROR → RESPONSE IS NULL");
+//         print("==================================================");
+//         return null;
+//       }
+
+//       if (res is! Map<String, dynamic>) {
+//         print("❌ CLIENT GET REVIEWS ERROR → RESPONSE IS NOT A MAP");
+//         print("➡️ RESPONSE TYPE → ${res.runtimeType}");
+//         print("==================================================");
+//         return null;
+//       }
+
+//       final bool success = res["success"] == true ||
+//           res["reviews"] != null ||
+//           res["stats"] != null;
+
+//       print("📦 RESPONSE PARSE CHECK");
+//       print("➡️ success flag → ${res["success"]}");
+//       print("➡️ has reviews → ${res["reviews"] != null}");
+//       print("➡️ has stats → ${res["stats"] != null}");
+//       print("➡️ final success → $success");
+
+//       if (!success) {
+//         print("❌ CLIENT GET REVIEWS FAILED");
+//         print("➡️ MESSAGE → ${res["message"]}");
+//         print("==================================================");
+//         return res;
+//       }
+
+//       final reviews = res["reviews"];
+//       final stats = res["stats"];
+
+//       print("✅ CLIENT GET REVIEWS SUCCESS");
+//       print("➡️ reviews type → ${reviews.runtimeType}");
+//       print("➡️ stats type → ${stats.runtimeType}");
+//       print(
+//           "➡️ total reviews received → ${reviews is List ? reviews.length : 0}");
+//       print(
+//           "➡️ avg rating → ${stats is Map ? stats["avgRating"] : "N/A"}");
+//       print(
+//           "➡️ totalReviews → ${stats is Map ? stats["totalReviews"] : "N/A"}");
+
+//       if (reviews is List && reviews.isNotEmpty) {
+//         for (int i = 0; i < reviews.length; i++) {
+//           final item = reviews[i];
+//           print("📝 REVIEW ITEM [$i] → $item");
+//         }
+//       } else {
+//         print("⚠️ NO REVIEWS FOUND IN RESPONSE LIST");
+//       }
+
+//       print("==================================================");
+//       return res;
+//     } catch (e) {
+//       print("❌ CLIENT GET REVIEWS EXCEPTION → $e");
+//       print("==================================================");
+//       return null;
+//     }
+//   }
+// }
+class ClientGetReviewRepo {
+  static Future<Map<String, dynamic>?> getReviews(String userId) async {
+    final cleanUserId = userId.trim();
+    final url = ApiConstants.clientGetReviews(cleanUserId);
+
+    print("==================================================");
+    print("🟣 CLIENT GET REVIEWS API START");
+    print("➡️ USER ID → $cleanUserId");
+    print("➡️ URL → $url");
+    print("==================================================");
+
+    if (cleanUserId.isEmpty) {
+      print("❌ CLIENT GET REVIEWS ERROR → USER ID IS EMPTY");
+      print("==================================================");
+      return null;
+    }
+
+    try {
+      print("📡 SENDING GET REQUEST...");
+      print("➡️ AUTH → true");
+      print("➡️ ROLE → client");
+
+      final res = await ApiService.get(
+        url,
+        auth: true,
+        role: "client",
+      );
+
+      print("--------------------------------------------------");
+      print("⬇️ CLIENT GET REVIEWS RAW RESPONSE → $res");
+      print("--------------------------------------------------");
+
+      return res;
+    } catch (e) {
+      print("❌ CLIENT GET REVIEWS EXCEPTION → $e");
+      print("==================================================");
+      return null;
     }
   }
 }
